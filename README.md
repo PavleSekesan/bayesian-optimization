@@ -18,7 +18,8 @@ This repository contains a from-scratch Bayesian optimization implementation in 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev,experiments]
+python -m pip install --upgrade pip setuptools
+python -m pip install --no-build-isolation -e .[dev,experiments]
 ```
 
 Note: the COCO experiment module is imported as `cocoex`, but the pip package name is `coco-experiment`.
