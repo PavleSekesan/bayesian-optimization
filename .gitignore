@@ -5,6 +5,7 @@ __pycache__/
 *.so
 
 .venv/
+.runtime/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -17,9 +18,14 @@ results/
 ppdata/
 
 *.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
 *.log
 *.out
 *.toc
+*.synctex.gz
 *.pdf
 report/figures/*.png
 report/figures/*.pdf

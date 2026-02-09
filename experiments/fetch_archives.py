@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-from experiments.common import ensure_directory
+from experiments.common import configure_runtime_dirs, ensure_directory
 
 
 def parse_args() -> argparse.Namespace:
@@ -40,6 +40,7 @@ def resolve_entry_path(entry: Any) -> str:
 
 def main() -> None:
     args = parse_args()
+    configure_runtime_dirs()
 
     try:
         from cocopp import archives  # type: ignore[import-not-found]

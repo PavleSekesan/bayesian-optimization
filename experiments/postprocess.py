@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from experiments.common import ensure_directory
+from experiments.common import configure_runtime_dirs, ensure_directory
 
 
 def parse_args() -> argparse.Namespace:
@@ -64,6 +64,7 @@ def resolve_inputs(local_inputs: list[str], archive_keywords: list[str], suite: 
 
 def main() -> None:
     args = parse_args()
+    configure_runtime_dirs()
     inputs = resolve_inputs(args.input, args.archive, args.suite)
     ensure_directory(args.output)
 

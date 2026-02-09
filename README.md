@@ -47,6 +47,8 @@ python experiments/postprocess.py \
   --output ppdata
 ```
 
+`experiments/postprocess.py` and `experiments/fetch_archives.py` use local runtime directories under `.runtime/` for cache/config data to avoid home-directory permission issues.
+
 `experiments/fetch_archives.py` can also resolve and download matching official archive datasets.
 
 ## Repository layout
