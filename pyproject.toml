@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bayesian-optimization-project"
+version = "0.1.0"
+description = "Educational Bayesian optimization implementation from scratch"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Course Project" }]
+dependencies = [
+  "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "mypy>=1.10",
+  "ruff>=0.6",
+]
+experiments = [
+  "cocoex>=2.8.0",
+  "cocopp>=2.8.0",
+  "matplotlib>=3.8",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unused_configs = true
+mypy_path = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src", "tests", "experiments"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N"]
