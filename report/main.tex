@@ -1,0 +1,153 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{siunitx}
+\usepackage{float}
+
+\title{From-Scratch Bayesian Optimization for BBOB Benchmarks}
+\author{Bayesian Optimization Course Project}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This project implements Bayesian Optimization (BO) from scratch in Python as an educational library.
+The surrogate model is a Gaussian Process (GP) with an RBF kernel, and the acquisition policy is configurable between Expected Improvement (EI) and Probability of Improvement (PI).
+The implementation is benchmarked on the COCO/BBOB black-box optimization suite and compared against published reference methods through the \texttt{cocopp} archive/postprocessing tools.
+The goal is clarity and reproducibility rather than state-of-the-art performance.
+\end{abstract}
+
+\section{Introduction}
+Bayesian Optimization is designed for expensive black-box problems where gradient information is unavailable and each function evaluation is costly.
+Instead of directly optimizing the objective, BO fits a probabilistic surrogate and uses an acquisition function to balance exploration (high uncertainty) and exploitation (low predicted value) \cite{brochu2010tutorial,shahriari2016taking}.
+
+Given a minimization objective $f(x)$ on a bounded domain, BO iterates:
+\begin{enumerate}
+    \item Fit/update a GP posterior on observed data.
+    \item Maximize an acquisition function to choose the next query point.
+    \item Evaluate $f$ once and append the new observation.
+\end{enumerate}
+
+\section{Method}
+\subsection{Gaussian Process Surrogate}
+A GP prior with mean $m(x)$ and covariance kernel $k(x,x')$ models the unknown objective.
+For this project, the kernel is RBF:
+\begin{equation}
+    k(x,x') = a \exp\left(-\frac{\|x-x'\|_2^2}{2\ell^2}\right),
+\end{equation}
+where $a$ is the amplitude and $\ell$ is the length scale.
+
+Given observed inputs $X$ and values $y$, posterior mean and variance follow the standard closed-form GP conditioning equations, solved with Cholesky factorization for numerical stability.
+
+\subsection{Acquisition Functions}
+The library supports two acquisition functions for minimization:
+\begin{itemize}
+    \item Expected Improvement (EI)
+    \item Probability of Improvement (PI)
+\end{itemize}
+with exploration offset $\xi$.
+
+\subsection{Acquisition Maximization}
+To keep the project fully from scratch, acquisition optimization is implemented without external optimizers:
+\begin{enumerate}
+    \item Uniform random candidate sampling in the box constraints.
+    \item Selection of top candidate starts.
+    \item Coordinate-wise local refinement with step-size halving.
+\end{enumerate}
+
+\section{Implementation Summary}
+The repository is organized as:
+\begin{itemize}
+    \item \texttt{src/bayesopt}: library implementation (GP, EI/PI, BO loop).
+    \item \texttt{tests}: unit tests for core components.
+    \item \texttt{experiments}: COCO/BBOB runners and \texttt{cocopp} postprocessing helpers.
+\end{itemize}
+
+Core implementation decisions:
+\begin{itemize}
+    \item Fixed GP hyperparameters (educational scope, not tuned per function).
+    \item Internal domain normalization to the unit hypercube.
+    \item Evaluation budget set to $40 \times d$ per problem (dimension $d$).
+\end{itemize}
+
+\section{Experimental Setup}
+The benchmark protocol uses the COCO BBOB suite via \texttt{cocoex}.
+The configured subset is:
+\begin{itemize}
+    \item Functions: all 24 noiseless BBOB functions.
+    \item Dimensions: $d \in \{2,3,5,10\}$.
+    \item Instances: 1--5.
+    \item Budget: $40d$ evaluations per run.
+\end{itemize}
+
+Compared methods:
+\begin{itemize}
+    \item BO-EI (this implementation)
+    \item BO-PI (this implementation)
+    \item Archived published methods from \texttt{cocopp}: CMA-ES and BFGS
+\end{itemize}
+
+\section{Results}
+Postprocessing and figure generation are performed with:
+\begin{verbatim}
+python experiments/postprocess.py \
+  --input results/bo_ei results/bo_pi \
+  --archive "CMA-ES" "BFGS" \
+  --output ppdata
+\end{verbatim}
+
+\subsection{ECDF/ERT Plots}
+\IfFileExists{figures/ecdf.pdf}{
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/ecdf.pdf}
+    \caption{ECDF performance comparison generated from \texttt{cocopp}.}
+\end{figure}
+}{
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.9\textwidth}{
+    Place \texttt{cocopp}-generated ECDF plot at \texttt{report/figures/ecdf.pdf}.
+    }}
+    \caption{ECDF plot placeholder.}
+\end{figure}
+}
+
+\subsection{Summary Table}
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Method & $d=2$ & $d=3$ & $d=5$ & $d=10$ \\
+\midrule
+BO-EI & Fill from ppdata & Fill from ppdata & Fill from ppdata & Fill from ppdata \\
+BO-PI & Fill from ppdata & Fill from ppdata & Fill from ppdata & Fill from ppdata \\
+CMA-ES & Fill from ppdata & Fill from ppdata & Fill from ppdata & Fill from ppdata \\
+BFGS & Fill from ppdata & Fill from ppdata & Fill from ppdata & Fill from ppdata \\
+\bottomrule
+\end{tabular}
+\caption{Dimension-wise summary (e.g., ERT or target hit rates) extracted from \texttt{cocopp}.}
+\end{table}
+
+Qualitatively, BO variants are expected to be competitive in low dimensions for tight budgets, while CMA-ES often scales more robustly in higher-dimensional multimodal settings \cite{hansen2006cmaes}.
+The exact ranking should be read from the generated \texttt{cocopp} outputs for this repository run.
+
+\section{Discussion}
+This implementation intentionally favors readability over aggressive performance engineering.
+Key limitations include fixed GP hyperparameters, a simple acquisition maximizer, and cubic GP scaling with number of observations.
+For a course project, this tradeoff keeps the algorithm transparent and easy to reason about while still supporting standard BO workflows.
+
+\section{Conclusion}
+The project demonstrates a complete, understandable BO pipeline from scratch: GP surrogate modeling, EI/PI acquisition, iterative optimization, and BBOB benchmarking with published-method comparisons through COCO tooling.
+The provided scripts and report structure allow reproducible reruns and straightforward extensions.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
