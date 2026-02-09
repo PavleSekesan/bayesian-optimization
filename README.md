@@ -33,9 +33,9 @@ pytest
 ## Run BBOB experiments
 
 ```bash
-python experiments/run_bbob_bo.py --acquisition ei --output results/bo_ei
-python experiments/run_bbob_bo.py --acquisition pi --output results/bo_pi
-python experiments/run_bbob_random.py --output results/random
+python experiments/run_bbob_bo.py --acquisition ei --max-budget 200 --output results/bo_ei
+python experiments/run_bbob_bo.py --acquisition pi --max-budget 200 --output results/bo_pi
+python experiments/run_bbob_random.py --max-budget 200 --output results/random
 ```
 
 ## Compare against published methods and generate plots
