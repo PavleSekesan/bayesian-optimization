@@ -6,7 +6,11 @@ from typing import Any
 import numpy as np
 
 from bayesopt.optimizer import AcquisitionConfig, BayesianOptimizer
-from experiments.common import build_suite_filter, ensure_directory, parse_dimensions, seed_for_problem
+
+try:
+    from experiments.common import build_suite_filter, ensure_directory, parse_dimensions, seed_for_problem
+except ModuleNotFoundError:
+    from common import build_suite_filter, ensure_directory, parse_dimensions, seed_for_problem
 
 
 def parse_args() -> argparse.Namespace:
