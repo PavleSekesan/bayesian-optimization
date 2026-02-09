@@ -20,7 +20,7 @@ dev = [
   "ruff>=0.6",
 ]
 experiments = [
-  "cocoex>=2.8.0",
+  "coco-experiment>=2.8.0",
   "cocopp>=2.8.0",
   "matplotlib>=3.8",
 ]

@@ -58,7 +58,9 @@ def main() -> None:
     try:
         import cocoex  # type: ignore[import-not-found]
     except ImportError as error:
-        raise RuntimeError("cocoex is required. Install with: pip install cocoex") from error
+        raise RuntimeError(
+            "cocoex module is required. Install package with: pip install coco-experiment"
+        ) from error
 
     suite = cocoex.Suite("bbob", "", build_suite_filter(dimensions, args.instances))
     observer = cocoex.Observer("bbob", f"result_folder: {args.output}")

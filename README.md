@@ -21,6 +21,8 @@ source .venv/bin/activate
 pip install -e .[dev,experiments]
 ```
 
+Note: the COCO experiment module is imported as `cocoex`, but the pip package name is `coco-experiment`.
+
 ## Run tests
 
 ```bash
