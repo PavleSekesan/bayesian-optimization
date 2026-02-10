@@ -36,6 +36,16 @@ def match_archive_entry(archive: Any, keyword: str) -> Any:
     return matches[0]
 
 
+def get_suite_archive(archives_module_or_obj: Any, suite: str) -> Any:
+    if hasattr(archives_module_or_obj, "get"):
+        return archives_module_or_obj.get(suite)
+    if hasattr(archives_module_or_obj, suite):
+        return getattr(archives_module_or_obj, suite)
+    if hasattr(archives_module_or_obj, "_get"):
+        return archives_module_or_obj._get(suite)
+    raise ValueError(f"Unable to resolve archive suite: {suite}")
+
+
 def resolve_entry_path(entry: Any) -> str:
     if hasattr(entry, "get"):
         return str(entry.get())
@@ -57,10 +67,18 @@ def resolve_inputs(local_inputs: list[str], archive_keywords: list[str], suite: 
     except ImportError as error:
         raise RuntimeError("cocopp is required. Install with: pip install cocopp") from error
 
-    archive = archives.get(suite)
+    try:
+        archive = get_suite_archive(archives, suite)
+    except Exception as error:
+        print(f"Warning: unable to load suite archive '{suite}': {error}")
+        return resolved
+
     for keyword in archive_keywords:
-        entry = match_archive_entry(archive, keyword)
-        resolved.append(resolve_entry_path(entry))
+        try:
+            entry = match_archive_entry(archive, keyword)
+            resolved.append(resolve_entry_path(entry))
+        except Exception as error:
+            print(f"Warning: skipping archive keyword '{keyword}': {error}")
 
     return resolved
 

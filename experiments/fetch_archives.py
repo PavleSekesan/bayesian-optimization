@@ -35,6 +35,16 @@ def match_archive_entry(archive: Any, keyword: str) -> Any:
     return matches[0]
 
 
+def get_suite_archive(archives_module_or_obj: Any, suite: str) -> Any:
+    if hasattr(archives_module_or_obj, "get"):
+        return archives_module_or_obj.get(suite)
+    if hasattr(archives_module_or_obj, suite):
+        return getattr(archives_module_or_obj, suite)
+    if hasattr(archives_module_or_obj, "_get"):
+        return archives_module_or_obj._get(suite)
+    raise ValueError(f"Unable to resolve archive suite: {suite}")
+
+
 def resolve_entry_path(entry: Any) -> str:
     if hasattr(entry, "get"):
         return str(entry.get())
@@ -50,7 +60,7 @@ def main() -> None:
     except ImportError as error:
         raise RuntimeError("cocopp is required. Install with: pip install cocopp") from error
 
-    archive = archives.get(args.suite)
+    archive = get_suite_archive(archives, args.suite)
 
     output_path = Path(args.output)
     ensure_directory(str(output_path.parent))
