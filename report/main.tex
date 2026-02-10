@@ -90,7 +90,7 @@ Compared methods:
 \begin{itemize}
     \item BO-EI (this implementation)
     \item BO-PI (this implementation)
-    \item Archived published methods from \texttt{cocopp}: CMA-ES and BFGS
+    \item Archived published methods from \texttt{cocopp}: CMA-ES and BFGS (when archive access is available)
 \end{itemize}
 
 \section{Results}
@@ -101,6 +101,10 @@ python experiments/postprocess.py \
   --archive "CMA-ES" "BFGS" \
   --output ppdata
 \end{verbatim}
+
+For the run in this repository snapshot, postprocessing output was generated in
+\texttt{ppdata\_cap200/bo\_ei\_bo\_pi\_021002h3119}.
+Public archive downloads were unavailable in the execution environment, so the plotted comparison contains BO-EI vs BO-PI only.
 
 \subsection{ECDF/ERT Plots}
 \IfFileExists{figures/ecdf.pdf}{
