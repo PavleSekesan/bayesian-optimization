@@ -29,3 +29,5 @@ ppdata/
 *.pdf
 report/figures/*.png
 report/figures/*.pdf
+ppdata_cap200
+inst
