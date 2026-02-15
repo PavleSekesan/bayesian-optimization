@@ -24,8 +24,6 @@ class GaussianProcessConfig:
 @dataclass(frozen=True)
 class AcquisitionConfig:
     xi: float = 0.01
-    n_candidates: int = 2048
-    n_starts: int = 8
     max_opt_iters: int = 80
 
 
@@ -88,9 +86,6 @@ class BayesianOptimizer:
                 bounds=self._unit_bounds,
                 best_y=best_y,
                 xi=self._acq_config.xi,
-                rng=self._rng,
-                n_candidates=self._acq_config.n_candidates,
-                n_starts=self._acq_config.n_starts,
                 max_opt_iters=self._acq_config.max_opt_iters,
             )
 
