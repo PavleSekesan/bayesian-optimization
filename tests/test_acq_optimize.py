@@ -12,7 +12,10 @@ def test_maximize_acquisition_returns_good_point() -> None:
         delta = float(x[0]) - target
         return -(delta * delta)
 
-    best_x, best_value = maximize_acquisition(acquisition_fn=acquisition)
+    best_x, best_value = maximize_acquisition(
+        acquisition_fn=acquisition,
+        x0=np.array([0.0], dtype=np.float64),
+    )
 
     assert best_x.shape == (1,)
     assert abs(float(best_x[0]) - target) < 0.1

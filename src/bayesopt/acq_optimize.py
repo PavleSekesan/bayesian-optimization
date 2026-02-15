@@ -15,12 +15,11 @@ AcquisitionFunction = Callable[[FloatArray], float]
 
 def maximize_acquisition(
     acquisition_fn: AcquisitionFunction,
+    x0: FloatArray,
 ) -> tuple[FloatArray, float]:
-    dimension = int(getattr(acquisition_fn, "dimension", 1))
-    x0 = np.zeros(dimension, dtype=np.float64)
     result = minimize(
         lambda x: -float(acquisition_fn(np.asarray(x, dtype=np.float64))),
-        x0=x0,
+        x0=np.asarray(x0, dtype=np.float64),
         method="L-BFGS-B",
     )
     best_x = np.asarray(result.x, dtype=np.float64)
@@ -35,6 +34,7 @@ def suggest_next_point(
     xi: float,
 ) -> tuple[FloatArray, float]:
     validated_bounds = validate_bounds(bounds)
+    x0 = np.mean(validated_bounds, axis=1)
 
     def acquisition_fn(point: FloatArray) -> float:
         query = np.asarray(point, dtype=np.float64).reshape(1, -1)
@@ -47,5 +47,4 @@ def suggest_next_point(
         )
         return float(scores[0])
 
-    setattr(acquisition_fn, "dimension", validated_bounds.shape[0])
-    return maximize_acquisition(acquisition_fn)
+    return maximize_acquisition(acquisition_fn, x0=x0)
