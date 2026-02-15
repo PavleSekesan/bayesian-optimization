@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from bayesopt.acq_optimize import maximize_acquisition
 from bayesopt.space import sample_uniform
+
+pytest.importorskip("scipy")
 
 
 def test_maximize_acquisition_returns_good_point() -> None:

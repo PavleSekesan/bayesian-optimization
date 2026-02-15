@@ -18,24 +18,22 @@ def maximize_acquisition(
     rng: np.random.Generator,
     n_candidates: int = 2048,
     n_starts: int = 8,
-    initial_step_fraction: float = 0.1,
-    min_step_fraction: float = 1e-3,
-    max_refine_iters: int = 80,
+    max_opt_iters: int = 80,
 ) -> tuple[FloatArray, float]:
     if n_candidates <= 0:
         raise ValueError("n_candidates must be positive.")
     if n_starts <= 0:
         raise ValueError("n_starts must be positive.")
-    if initial_step_fraction <= 0.0:
-        raise ValueError("initial_step_fraction must be positive.")
-    if min_step_fraction <= 0.0:
-        raise ValueError("min_step_fraction must be positive.")
-    if max_refine_iters <= 0:
-        raise ValueError("max_refine_iters must be positive.")
+    if max_opt_iters <= 0:
+        raise ValueError("max_opt_iters must be positive.")
+
+    try:
+        from scipy.optimize import minimize
+    except ImportError as error:
+        raise RuntimeError("SciPy is required for acquisition optimization.") from error
 
     validated_bounds = validate_bounds(bounds)
-    width = validated_bounds[:, 1] - validated_bounds[:, 0]
-    min_step = min_step_fraction * width
+    scipy_bounds = [(float(low), float(high)) for low, high in validated_bounds]
 
     candidates = sample_uniform(rng, validated_bounds, n_candidates)
     candidate_values = acquisition_fn(candidates)
@@ -49,33 +47,25 @@ def maximize_acquisition(
     best_x = np.asarray(candidates[best_index], dtype=np.float64).copy()
     best_value = float(candidate_values[best_index])
 
+    def objective(x: FloatArray) -> float:
+        point = clip_to_bounds(np.asarray(x, dtype=np.float64), validated_bounds)
+        return -float(acquisition_fn(point.reshape(1, -1))[0])
+
     for start_index in top_indices[::-1]:
-        current_x = np.asarray(candidates[int(start_index)], dtype=np.float64).copy()
-        current_value = float(candidate_values[int(start_index)])
-        step = initial_step_fraction * width
+        start = np.asarray(candidates[int(start_index)], dtype=np.float64).copy()
+        result = minimize(
+            objective,
+            x0=start,
+            method="L-BFGS-B",
+            bounds=scipy_bounds,
+            options={"maxiter": max_opt_iters},
+        )
+        candidate_x = clip_to_bounds(np.asarray(result.x, dtype=np.float64), validated_bounds)
+        candidate_value = float(acquisition_fn(candidate_x.reshape(1, -1))[0])
 
-        for _ in range(max_refine_iters):
-            improved = False
-            for dim in range(validated_bounds.shape[0]):
-                for direction in (-1.0, 1.0):
-                    trial_x = current_x.copy()
-                    trial_x[dim] += direction * step[dim]
-                    trial_x = clip_to_bounds(trial_x, validated_bounds)
-                    trial_value = float(acquisition_fn(trial_x.reshape(1, -1))[0])
-
-                    if trial_value > current_value:
-                        current_x = trial_x
-                        current_value = trial_value
-                        improved = True
-
-            if current_value > best_value:
-                best_x = current_x.copy()
-                best_value = current_value
-
-            if not improved:
-                step *= 0.5
-                if np.all(step <= min_step):
-                    break
+        if candidate_value > best_value:
+            best_x = candidate_x
+            best_value = candidate_value
 
     return best_x, best_value
 
@@ -88,9 +78,7 @@ def suggest_next_point(
     rng: np.random.Generator,
     n_candidates: int = 2048,
     n_starts: int = 8,
-    initial_step_fraction: float = 0.1,
-    min_step_fraction: float = 1e-3,
-    max_refine_iters: int = 80,
+    max_opt_iters: int = 80,
 ) -> tuple[FloatArray, float]:
     validated_bounds = validate_bounds(bounds)
 
@@ -109,7 +97,5 @@ def suggest_next_point(
         rng=rng,
         n_candidates=n_candidates,
         n_starts=n_starts,
-        initial_step_fraction=initial_step_fraction,
-        min_step_fraction=min_step_fraction,
-        max_refine_iters=max_refine_iters,
+        max_opt_iters=max_opt_iters,
     )

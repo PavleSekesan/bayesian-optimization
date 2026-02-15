@@ -7,7 +7,7 @@ This repository contains a from-scratch Bayesian optimization implementation in 
 - Gaussian-process surrogate model with an RBF kernel
 - Acquisition function:
   - Expected Improvement (EI)
-- From-scratch acquisition maximization (random multi-start + local coordinate refinement)
+- Acquisition maximization with SciPy L-BFGS-B (multi-start from random samples)
 - BBOB benchmarking scripts using `cocoex` and postprocessing with `cocopp`
 - Unit tests for core methods
 - LaTeX report in `report/`

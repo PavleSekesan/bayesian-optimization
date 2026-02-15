@@ -26,9 +26,7 @@ class AcquisitionConfig:
     xi: float = 0.01
     n_candidates: int = 2048
     n_starts: int = 8
-    initial_step_fraction: float = 0.1
-    min_step_fraction: float = 1e-3
-    max_refine_iters: int = 80
+    max_opt_iters: int = 80
 
 
 @dataclass(frozen=True)
@@ -93,9 +91,7 @@ class BayesianOptimizer:
                 rng=self._rng,
                 n_candidates=self._acq_config.n_candidates,
                 n_starts=self._acq_config.n_starts,
-                initial_step_fraction=self._acq_config.initial_step_fraction,
-                min_step_fraction=self._acq_config.min_step_fraction,
-                max_refine_iters=self._acq_config.max_refine_iters,
+                max_opt_iters=self._acq_config.max_opt_iters,
             )
 
             next_x = np.asarray(from_unit_cube(next_unit, self._bounds), dtype=np.float64)
