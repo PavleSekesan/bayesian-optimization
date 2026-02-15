@@ -6,11 +6,7 @@ from typing import Any
 import numpy as np
 
 from bayesopt.space import sample_uniform
-
-try:
-    from experiments.common import build_suite_filter, ensure_directory, parse_dimensions, seed_for_problem
-except ModuleNotFoundError:
-    from common import build_suite_filter, ensure_directory, parse_dimensions, seed_for_problem
+from experiments.common import build_suite_filter, ensure_directory, parse_dimensions, seed_for_problem
 
 
 def parse_args() -> argparse.Namespace:
@@ -46,12 +42,7 @@ def main() -> None:
     dimensions = parse_dimensions(args.dimensions)
     ensure_directory(args.output)
 
-    try:
-        import cocoex  # type: ignore[import-not-found]
-    except ImportError as error:
-        raise RuntimeError(
-            "cocoex module is required. Install package with: pip install coco-experiment"
-        ) from error
+    import cocoex  # type: ignore[import-not-found]
 
     suite = cocoex.Suite("bbob", "", build_suite_filter(dimensions, args.instances))
     observer = cocoex.Observer("bbob", f"result_folder: {args.output}")

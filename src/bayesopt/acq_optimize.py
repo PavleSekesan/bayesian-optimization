@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import numpy as np
+from scipy.optimize import minimize
 
 from bayesopt.acquisition import acquisition_values
 from bayesopt.gaussian_process import GaussianProcessRegressor
@@ -15,11 +16,6 @@ AcquisitionFunction = Callable[[FloatArray], float]
 def maximize_acquisition(
     acquisition_fn: AcquisitionFunction,
 ) -> tuple[FloatArray, float]:
-    try:
-        from scipy.optimize import minimize
-    except ImportError as error:
-        raise RuntimeError("SciPy is required for acquisition optimization.") from error
-
     if not hasattr(acquisition_fn, "x0") or not hasattr(acquisition_fn, "bounds"):
         raise ValueError("acquisition_fn must define 'x0' and 'bounds' attributes.")
 

@@ -5,8 +5,6 @@ import pytest
 
 from bayesopt.optimizer import BayesianOptimizer
 
-pytest.importorskip("scipy")
-
 
 def sphere(x: np.ndarray) -> float:
     center = np.array([0.25, 0.25], dtype=np.float64)
