@@ -14,7 +14,7 @@ def sphere(x: np.ndarray) -> float:
 
 def test_optimizer_respects_budget_and_shapes() -> None:
     bounds = np.array([[0.0, 1.0], [0.0, 1.0]], dtype=np.float64)
-    optimizer = BayesianOptimizer(bounds=bounds, acquisition="ei", seed=3)
+    optimizer = BayesianOptimizer(bounds=bounds, seed=3)
 
     result = optimizer.run(objective=sphere, budget=20, n_initial=6)
 
@@ -26,7 +26,7 @@ def test_optimizer_respects_budget_and_shapes() -> None:
 
 def test_optimizer_improves_over_initial_set() -> None:
     bounds = np.array([[0.0, 1.0], [0.0, 1.0]], dtype=np.float64)
-    optimizer = BayesianOptimizer(bounds=bounds, acquisition="ei", seed=11)
+    optimizer = BayesianOptimizer(bounds=bounds, seed=11)
 
     result = optimizer.run(objective=sphere, budget=18, n_initial=6)
 
@@ -36,7 +36,7 @@ def test_optimizer_improves_over_initial_set() -> None:
 
 def test_optimizer_rejects_non_positive_budget() -> None:
     bounds = np.array([[0.0, 1.0]], dtype=np.float64)
-    optimizer = BayesianOptimizer(bounds=bounds, acquisition="ei", seed=1)
+    optimizer = BayesianOptimizer(bounds=bounds, seed=1)
 
     with pytest.raises(ValueError):
         optimizer.run(objective=lambda x: float(np.sum(x)), budget=0)

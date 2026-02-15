@@ -9,7 +9,7 @@ from bayesopt.acq_optimize import suggest_next_point
 from bayesopt.gaussian_process import GaussianProcessRegressor
 from bayesopt.kernels import RBFKernel
 from bayesopt.space import from_unit_cube, sample_uniform, to_unit_cube, validate_bounds
-from bayesopt.types import AcquisitionKind, FloatArray, ObjectiveFunction
+from bayesopt.types import FloatArray, ObjectiveFunction
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,6 @@ class GaussianProcessConfig:
 
 @dataclass(frozen=True)
 class AcquisitionConfig:
-    kind: AcquisitionKind = "ei"
     xi: float = 0.01
     n_candidates: int = 2048
     n_starts: int = 8
@@ -45,7 +44,6 @@ class BayesianOptimizer:
     def __init__(
         self,
         bounds: Sequence[tuple[float, float]] | FloatArray,
-        acquisition: AcquisitionKind = "ei",
         gp_config: GaussianProcessConfig | None = None,
         acquisition_config: AcquisitionConfig | None = None,
         seed: int | None = None,
@@ -56,13 +54,7 @@ class BayesianOptimizer:
         self._rng = np.random.default_rng(seed)
 
         self._gp_config = gp_config if gp_config is not None else GaussianProcessConfig()
-
-        if acquisition_config is None:
-            self._acq_config = AcquisitionConfig(kind=acquisition)
-        else:
-            self._acq_config = acquisition_config
-            if acquisition_config.kind != acquisition:
-                raise ValueError("acquisition and acquisition_config.kind must match.")
+        self._acq_config = acquisition_config if acquisition_config is not None else AcquisitionConfig()
 
         self._unit_bounds = np.column_stack(
             (np.zeros(self._dimension, dtype=np.float64), np.ones(self._dimension, dtype=np.float64))
@@ -96,7 +88,6 @@ class BayesianOptimizer:
             next_unit, acquisition_value = suggest_next_point(
                 gp=gp,
                 bounds=self._unit_bounds,
-                acquisition_kind=self._acq_config.kind,
                 best_y=best_y,
                 xi=self._acq_config.xi,
                 rng=self._rng,

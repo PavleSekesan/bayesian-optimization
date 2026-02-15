@@ -7,7 +7,7 @@ import numpy as np
 from bayesopt.acquisition import acquisition_values
 from bayesopt.gaussian_process import GaussianProcessRegressor
 from bayesopt.space import clip_to_bounds, sample_uniform, validate_bounds
-from bayesopt.types import AcquisitionKind, FloatArray
+from bayesopt.types import FloatArray
 
 AcquisitionFunction = Callable[[FloatArray], FloatArray]
 
@@ -83,7 +83,6 @@ def maximize_acquisition(
 def suggest_next_point(
     gp: GaussianProcessRegressor,
     bounds: FloatArray,
-    acquisition_kind: AcquisitionKind,
     best_y: float,
     xi: float,
     rng: np.random.Generator,
@@ -98,7 +97,6 @@ def suggest_next_point(
     def acquisition_fn(points: FloatArray) -> FloatArray:
         mean, variance = gp.predict(points)
         return acquisition_values(
-            kind=acquisition_kind,
             mean=mean,
             variance=variance,
             best_y=best_y,

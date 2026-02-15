@@ -5,9 +5,8 @@ This repository contains a from-scratch Bayesian optimization implementation in 
 ## Scope
 
 - Gaussian-process surrogate model with an RBF kernel
-- Acquisition functions:
+- Acquisition function:
   - Expected Improvement (EI)
-  - Probability of Improvement (PI)
 - From-scratch acquisition maximization (random multi-start + local coordinate refinement)
 - BBOB benchmarking scripts using `cocoex` and postprocessing with `cocopp`
 - Unit tests for core methods
@@ -33,8 +32,7 @@ pytest
 ## Run BBOB experiments
 
 ```bash
-python experiments/run_bbob_bo.py --acquisition ei --max-budget 200 --output results/bo_ei
-python experiments/run_bbob_bo.py --acquisition pi --max-budget 200 --output results/bo_pi
+python experiments/run_bbob_bo.py --max-budget 200 --output results/bo_ei
 python experiments/run_bbob_random.py --max-budget 200 --output results/random
 ```
 
@@ -42,7 +40,7 @@ python experiments/run_bbob_random.py --max-budget 200 --output results/random
 
 ```bash
 python experiments/postprocess.py \
-  --input results/bo_ei results/bo_pi \
+  --input results/bo_ei \
   --archive "CMA-ES" "BFGS" \
   --output ppdata
 ```

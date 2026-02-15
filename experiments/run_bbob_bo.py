@@ -24,7 +24,6 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Optional cap for the per-problem budget. 0 means no cap.",
     )
-    parser.add_argument("--acquisition", choices=["ei", "pi"], default="ei")
     parser.add_argument("--xi", type=float, default=0.01)
     parser.add_argument("--n-candidates", type=int, default=2048)
     parser.add_argument("--n-starts", type=int, default=8)
@@ -42,7 +41,6 @@ def run_problem(problem: Any, args: argparse.Namespace) -> None:
     local_seed = seed_for_problem(args.seed, str(problem.id))
 
     acq_config = AcquisitionConfig(
-        kind=args.acquisition,
         xi=args.xi,
         n_candidates=args.n_candidates,
         n_starts=args.n_starts,
@@ -50,7 +48,6 @@ def run_problem(problem: Any, args: argparse.Namespace) -> None:
 
     optimizer = BayesianOptimizer(
         bounds=bounds,
-        acquisition=args.acquisition,
         acquisition_config=acq_config,
         seed=local_seed,
     )
