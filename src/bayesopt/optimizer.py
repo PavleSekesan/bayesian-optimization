@@ -24,7 +24,6 @@ class GaussianProcessConfig:
 @dataclass(frozen=True)
 class AcquisitionConfig:
     xi: float = 0.01
-    max_opt_iters: int = 80
 
 
 @dataclass(frozen=True)
@@ -86,7 +85,6 @@ class BayesianOptimizer:
                 bounds=self._unit_bounds,
                 best_y=best_y,
                 xi=self._acq_config.xi,
-                max_opt_iters=self._acq_config.max_opt_iters,
             )
 
             next_x = np.asarray(from_unit_cube(next_unit, self._bounds), dtype=np.float64)

@@ -16,13 +16,12 @@ AcquisitionFunction = Callable[[FloatArray], float]
 def maximize_acquisition(
     acquisition_fn: AcquisitionFunction,
 ) -> tuple[FloatArray, float]:
-    x0 = np.asarray(getattr(acquisition_fn, "x0", np.zeros(1, dtype=np.float64)), dtype=np.float64)
-    max_opt_iters = int(getattr(acquisition_fn, "max_opt_iters", 80))
+    dimension = int(getattr(acquisition_fn, "dimension", 1))
+    x0 = np.zeros(dimension, dtype=np.float64)
     result = minimize(
         lambda x: -float(acquisition_fn(np.asarray(x, dtype=np.float64))),
         x0=x0,
         method="L-BFGS-B",
-        options={"maxiter": max_opt_iters},
     )
     best_x = np.asarray(result.x, dtype=np.float64)
     best_value = float(acquisition_fn(best_x))
@@ -34,10 +33,8 @@ def suggest_next_point(
     bounds: FloatArray,
     best_y: float,
     xi: float,
-    max_opt_iters: int = 80,
 ) -> tuple[FloatArray, float]:
     validated_bounds = validate_bounds(bounds)
-    x0 = np.mean(validated_bounds, axis=1)
 
     def acquisition_fn(point: FloatArray) -> float:
         query = np.asarray(point, dtype=np.float64).reshape(1, -1)
@@ -50,6 +47,5 @@ def suggest_next_point(
         )
         return float(scores[0])
 
-    setattr(acquisition_fn, "x0", x0)
-    setattr(acquisition_fn, "max_opt_iters", max_opt_iters)
+    setattr(acquisition_fn, "dimension", validated_bounds.shape[0])
     return maximize_acquisition(acquisition_fn)

@@ -21,7 +21,6 @@ def parse_args() -> argparse.Namespace:
         help="Optional cap for the per-problem budget. 0 means no cap.",
     )
     parser.add_argument("--xi", type=float, default=0.01)
-    parser.add_argument("--max-opt-iters", type=int, default=80)
     parser.add_argument("--n-initial", type=int, default=0, help="0 means use library default.")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", default="results/bo")
@@ -37,7 +36,6 @@ def run_problem(problem: Any, args: argparse.Namespace) -> None:
 
     acq_config = AcquisitionConfig(
         xi=args.xi,
-        max_opt_iters=args.max_opt_iters,
     )
 
     optimizer = BayesianOptimizer(
