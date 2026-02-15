@@ -16,24 +16,12 @@ AcquisitionFunction = Callable[[FloatArray], float]
 def maximize_acquisition(
     acquisition_fn: AcquisitionFunction,
 ) -> tuple[FloatArray, float]:
-    if not hasattr(acquisition_fn, "x0") or not hasattr(acquisition_fn, "bounds"):
-        raise ValueError("acquisition_fn must define 'x0' and 'bounds' attributes.")
-
-    x0 = np.asarray(getattr(acquisition_fn, "x0"), dtype=np.float64)
-    bounds = validate_bounds(np.asarray(getattr(acquisition_fn, "bounds"), dtype=np.float64))
-    if x0.ndim != 1 or x0.shape[0] != bounds.shape[0]:
-        raise ValueError("acquisition_fn.x0 must be a 1D vector matching bounds dimensionality.")
-
+    x0 = np.asarray(getattr(acquisition_fn, "x0", np.zeros(1, dtype=np.float64)), dtype=np.float64)
     max_opt_iters = int(getattr(acquisition_fn, "max_opt_iters", 80))
-    if max_opt_iters <= 0:
-        raise ValueError("acquisition_fn.max_opt_iters must be positive.")
-
-    scipy_bounds = [(float(low), float(high)) for low, high in bounds]
     result = minimize(
         lambda x: -float(acquisition_fn(np.asarray(x, dtype=np.float64))),
         x0=x0,
         method="L-BFGS-B",
-        bounds=scipy_bounds,
         options={"maxiter": max_opt_iters},
     )
     best_x = np.asarray(result.x, dtype=np.float64)
@@ -50,7 +38,6 @@ def suggest_next_point(
 ) -> tuple[FloatArray, float]:
     validated_bounds = validate_bounds(bounds)
     x0 = np.mean(validated_bounds, axis=1)
-    scipy_bounds = [(float(low), float(high)) for low, high in validated_bounds]
 
     def acquisition_fn(point: FloatArray) -> float:
         query = np.asarray(point, dtype=np.float64).reshape(1, -1)
@@ -64,6 +51,5 @@ def suggest_next_point(
         return float(scores[0])
 
     setattr(acquisition_fn, "x0", x0)
-    setattr(acquisition_fn, "bounds", scipy_bounds)
     setattr(acquisition_fn, "max_opt_iters", max_opt_iters)
     return maximize_acquisition(acquisition_fn)
