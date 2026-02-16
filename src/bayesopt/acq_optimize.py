@@ -5,7 +5,7 @@ from collections.abc import Callable
 import numpy as np
 from scipy.optimize import minimize
 
-from bayesopt.acquisition import acquisition_values
+from bayesopt.acquisition import expected_improvement
 from bayesopt.gaussian_process import GaussianProcessRegressor
 from bayesopt.space import validate_bounds
 from bayesopt.types import FloatArray
@@ -39,12 +39,11 @@ def suggest_next_point(
     def acquisition_fn(point: FloatArray) -> float:
         query = np.asarray(point, dtype=np.float64).reshape(1, -1)
         mean, variance = gp.predict(query)
-        scores = acquisition_values(
-            mean=mean,
-            variance=variance,
+        return expected_improvement(
+            mean=float(mean[0]),
+            variance=float(variance[0]),
             best_y=best_y,
             xi=xi,
         )
-        return float(scores[0])
 
     return maximize_acquisition(acquisition_fn, x0=x0)

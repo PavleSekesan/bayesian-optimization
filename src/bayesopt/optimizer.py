@@ -52,7 +52,8 @@ class BayesianOptimizer:
         self._acq_config = acquisition_config if acquisition_config is not None else AcquisitionConfig()
 
         self._unit_bounds = np.column_stack(
-            (np.zeros(self._dimension, dtype=np.float64), np.ones(self._dimension, dtype=np.float64))
+            (np.zeros(self._dimension, dtype=np.float64),
+             np.ones(self._dimension, dtype=np.float64))
         )
 
     def run(
@@ -64,19 +65,22 @@ class BayesianOptimizer:
         if budget <= 0:
             raise ValueError("budget must be positive.")
 
-        initial_points = max(5, 2 * self._dimension) if n_initial is None else n_initial
+        initial_points = max(
+            5, 2 * self._dimension) if n_initial is None else n_initial
         if initial_points <= 0:
             raise ValueError("n_initial must be positive.")
         initial_points = min(initial_points, budget)
 
         x_history = sample_uniform(self._rng, self._bounds, initial_points)
-        y_history = np.asarray([float(objective(x)) for x in x_history], dtype=np.float64)
+        y_history = np.asarray([float(objective(x))
+                               for x in x_history], dtype=np.float64)
 
         gp = self._build_gp()
         acquisition_values_history: list[float] = []
 
         for _ in range(budget - initial_points):
-            x_unit = np.asarray(to_unit_cube(x_history, self._bounds), dtype=np.float64)
+            x_unit = np.asarray(to_unit_cube(
+                x_history, self._bounds), dtype=np.float64)
             gp.fit(x_unit, y_history)
 
             best_y = float(np.min(y_history))
@@ -87,7 +91,8 @@ class BayesianOptimizer:
                 xi=self._acq_config.xi,
             )
 
-            next_x = np.asarray(from_unit_cube(next_unit, self._bounds), dtype=np.float64)
+            next_x = np.asarray(from_unit_cube(
+                next_unit, self._bounds), dtype=np.float64)
             next_x = self._ensure_novel_candidate(next_x, x_history)
             next_y = float(objective(next_x))
 
@@ -101,7 +106,8 @@ class BayesianOptimizer:
             best_y=float(y_history[best_index]),
             x_history=np.asarray(x_history, dtype=np.float64),
             y_history=np.asarray(y_history, dtype=np.float64),
-            acquisition_history=np.asarray(acquisition_values_history, dtype=np.float64),
+            acquisition_history=np.asarray(
+                acquisition_values_history, dtype=np.float64),
         )
 
     def _build_gp(self) -> GaussianProcessRegressor:
