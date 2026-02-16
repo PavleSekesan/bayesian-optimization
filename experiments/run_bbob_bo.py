@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 
 from bayesopt.optimizer import AcquisitionConfig, BayesianOptimizer
-from common import build_suite_filter, ensure_directory, parse_dimensions, seed_for_problem
+from common import build_suite_filter, parse_dimensions, seed_for_problem
 
 
 def parse_args() -> argparse.Namespace:
@@ -54,7 +54,6 @@ def run_problem(problem: Any, args: argparse.Namespace) -> None:
 def main() -> None:
     args = parse_args()
     dimensions = parse_dimensions(args.dimensions)
-    ensure_directory(args.output)
 
     import cocoex  # type: ignore[import-not-found]
 
