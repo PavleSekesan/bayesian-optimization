@@ -40,8 +40,8 @@ def suggest_next_point(
         query = np.asarray(point, dtype=np.float64).reshape(1, -1)
         mean, variance = gp.predict(query)
         return expected_improvement(
-            mean=float(mean[0]),
-            variance=float(variance[0]),
+            mean=float(mean.item()),
+            variance=float(variance.item()),
             best_y=best_y,
             xi=xi,
         )
