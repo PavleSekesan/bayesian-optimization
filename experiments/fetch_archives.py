@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-from experiments.common import configure_runtime_dirs, ensure_directory
+from common import configure_runtime_dirs, ensure_directory
 
 
 def parse_args() -> argparse.Namespace:
