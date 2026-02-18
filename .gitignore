@@ -26,8 +26,9 @@ ppdata/
 *.log
 *.out
 *.toc
+*.bcf
+*.run.xml
 *.synctex.gz
-*.pdf
 report/figures/*.png
 report/figures/*.pdf
 ppdata_cap200

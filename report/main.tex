@@ -1,157 +1,95 @@
-\documentclass[11pt]{article}
+﻿\documentclass[11pt,a4paper]{article}
 
-\usepackage[a4paper,margin=1in]{geometry}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{booktabs}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[serbian]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{amsmath,amssymb}
 \usepackage{graphicx}
+\usepackage{booktabs}
 \usepackage{hyperref}
-\usepackage{siunitx}
-\usepackage{float}
+\usepackage{enumitem}
+\usepackage{csquotes}
+\usepackage[
+  backend=biber,
+  style=authoryear,
+  sorting=ynt
+]{biblatex}
+\addbibresource{references.bib}
 
-\title{From-Scratch Bayesian Optimization for BBOB Benchmarks}
-\author{Bayesian Optimization Course Project}
-\date{\today}
-
-\begin{document}
-\maketitle
-
-\begin{abstract}
-This project implements Bayesian Optimization (BO) from scratch in Python as an educational library.
-The surrogate model is a Gaussian Process (GP) with an RBF kernel, and the acquisition policy is configurable between Expected Improvement (EI) and Probability of Improvement (PI).
-The implementation is benchmarked on the COCO/BBOB black-box optimization suite and compared against published reference methods through the \texttt{cocopp} archive/postprocessing tools.
-The goal is clarity and reproducibility rather than state-of-the-art performance.
-\end{abstract}
-
-\section{Introduction}
-Bayesian Optimization is designed for expensive black-box problems where gradient information is unavailable and each function evaluation is costly.
-Instead of directly optimizing the objective, BO fits a probabilistic surrogate and uses an acquisition function to balance exploration (high uncertainty) and exploitation (low predicted value) \cite{brochu2010tutorial,shahriari2016taking}.
-
-Given a minimization objective $f(x)$ on a bounded domain, BO iterates:
-\begin{enumerate}
-    \item Fit/update a GP posterior on observed data.
-    \item Maximize an acquisition function to choose the next query point.
-    \item Evaluate $f$ once and append the new observation.
-\end{enumerate}
-
-\section{Method}
-\subsection{Gaussian Process Surrogate}
-A GP prior with mean $m(x)$ and covariance kernel $k(x,x')$ models the unknown objective.
-For this project, the kernel is RBF:
-\begin{equation}
-    k(x,x') = a \exp\left(-\frac{\|x-x'\|_2^2}{2\ell^2}\right),
-\end{equation}
-where $a$ is the amplitude and $\ell$ is the length scale.
-
-Given observed inputs $X$ and values $y$, posterior mean and variance follow the standard closed-form GP conditioning equations, solved with Cholesky factorization for numerical stability.
-
-\subsection{Acquisition Functions}
-The library supports two acquisition functions for minimization:
-\begin{itemize}
-    \item Expected Improvement (EI)
-    \item Probability of Improvement (PI)
-\end{itemize}
-with exploration offset $\xi$.
-
-\subsection{Acquisition Maximization}
-To keep the project fully from scratch, acquisition optimization is implemented without external optimizers:
-\begin{enumerate}
-    \item Uniform random candidate sampling in the box constraints.
-    \item Selection of top candidate starts.
-    \item Coordinate-wise local refinement with step-size halving.
-\end{enumerate}
-
-\section{Implementation Summary}
-The repository is organized as:
-\begin{itemize}
-    \item \texttt{src/bayesopt}: library implementation (GP, EI/PI, BO loop).
-    \item \texttt{tests}: unit tests for core components.
-    \item \texttt{experiments}: COCO/BBOB runners and \texttt{cocopp} postprocessing helpers.
-\end{itemize}
-
-Core implementation decisions:
-\begin{itemize}
-    \item Fixed GP hyperparameters (educational scope, not tuned per function).
-    \item Internal domain normalization to the unit hypercube.
-    \item Evaluation budget set to $40 \times d$ per problem (dimension $d$).
-\end{itemize}
-
-\section{Experimental Setup}
-The benchmark protocol uses the COCO BBOB suite via \texttt{cocoex}.
-The configured subset is:
-\begin{itemize}
-    \item Functions: all 24 noiseless BBOB functions.
-    \item Dimensions: $d \in \{2,3,5,10\}$.
-    \item Instances: 1--5.
-    \item Budget: $40d$ evaluations per run.
-\end{itemize}
-
-Compared methods:
-\begin{itemize}
-    \item BO-EI (this implementation)
-    \item BO-PI (this implementation)
-    \item Archived published methods from \texttt{cocopp}: CMA-ES and BFGS (when archive access is available)
-\end{itemize}
-
-\section{Results}
-Postprocessing and figure generation are performed with:
-\begin{verbatim}
-python experiments/postprocess.py \
-  --input results/bo_ei results/bo_pi \
-  --archive "CMA-ES" "BFGS" \
-  --output ppdata
-\end{verbatim}
-
-For the run in this repository snapshot, postprocessing output was generated in
-\texttt{ppdata\_cap200/bo\_ei\_bo\_pi\_021002h3119}.
-Public archive downloads were unavailable in the execution environment, so the plotted comparison contains BO-EI vs BO-PI only.
-
-\subsection{ECDF/ERT Plots}
-\IfFileExists{figures/ecdf.pdf}{
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{figures/ecdf.pdf}
-    \caption{ECDF performance comparison generated from \texttt{cocopp}.}
-\end{figure}
-}{
-\begin{figure}[H]
-    \centering
-    \fbox{\parbox{0.9\textwidth}{
-    Place \texttt{cocopp}-generated ECDF plot at \texttt{report/figures/ecdf.pdf}.
-    }}
-    \caption{ECDF plot placeholder.}
-\end{figure}
+\geometry{
+  left=25mm,
+  right=25mm,
+  top=25mm,
+  bottom=30mm
 }
 
-\subsection{Summary Table}
-\begin{table}[H]
-\centering
-\begin{tabular}{lcccc}
-\toprule
-Method & $d=2$ & $d=3$ & $d=5$ & $d=10$ \\
-\midrule
-BO-EI & Fill from ppdata & Fill from ppdata & Fill from ppdata & Fill from ppdata \\
-BO-PI & Fill from ppdata & Fill from ppdata & Fill from ppdata & Fill from ppdata \\
-CMA-ES & Fill from ppdata & Fill from ppdata & Fill from ppdata & Fill from ppdata \\
-BFGS & Fill from ppdata & Fill from ppdata & Fill from ppdata & Fill from ppdata \\
-\bottomrule
-\end{tabular}
-\caption{Dimension-wise summary (e.g., ERT or target hit rates) extracted from \texttt{cocopp}.}
-\end{table}
+\onehalfspacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
 
-Qualitatively, BO variants are expected to be competitive in low dimensions for tight budgets, while CMA-ES often scales more robustly in higher-dimensional multimodal settings \cite{hansen2006cmaes}.
-The exact ranking should be read from the generated \texttt{cocopp} outputs for this repository run.
+\title{\textbf{Bajesovska optimizacija}}
+\author{
+Ognjen Nešković 9/2022 \\
+Pavle Sekešan 87/2022 \\
+\small Projekat u okviru kursa Racunarska inteligencija
+}
+\date{Februar 2026}
 
-\section{Discussion}
-This implementation intentionally favors readability over aggressive performance engineering.
-Key limitations include fixed GP hyperparameters, a simple acquisition maximizer, and cubic GP scaling with number of observations.
-For a course project, this tradeoff keeps the algorithm transparent and easy to reason about while still supporting standard BO workflows.
+\begin{document}
 
-\section{Conclusion}
-The project demonstrates a complete, understandable BO pipeline from scratch: GP surrogate modeling, EI/PI acquisition, iterative optimization, and BBOB benchmarking with published-method comparisons through COCO tooling.
-The provided scripts and report structure allow reproducible reruns and straightforward extensions.
+\maketitle
+\thispagestyle{empty}
+\newpage
 
-\bibliographystyle{plain}
-\bibliography{references}
+\tableofcontents
+\newpage
+
+\section{Uvod}
+Bajesovska optimizacija (\textit{Bayesian optimization}) je porodica algoritama za \textit{Black box}\footnote{U ovom kontekstu Black box optimizacija odnosi se na optimizaciju funkcije bez poznavanja ikakvih njenih svojstava osim vrednosti u odabranim tačkama.} optimizaciju funkcija.
+Bajesovska optimizacija se primenjuje kao vrlo generalna metoda u slučajevima kada ne možemo pretpostaviti ništa dodatno u vezi funkcije koja se optimizuje - u praksi ova metoda optimizacije se primenjuje kada je funkcija neprekidna, nije diferencijabilna (ili je presporo evaluirati njen izvod), skupa da se evaluira i domen funkcije je nisko-dimenzion $d \leq 20$ \parencite{frazier2018tutorialbayesianoptimization}.
+Česta upotreba Bajesovske optimizacije je kao tehnika za nalaženje optimalnih hiperparametara modela koji se koriste u mašinskom učenju --- broj i veličina slojeva neuronske mreže, aktivacione funkcije, maksimalna dubina stabala odlučivanja...
+
+Osnovna ideja algoritama Bajesovske optimizacije je sledeća: Kako funkcija $f$ koja se optimizuje nije poznata tretiraćemo je kao nasumičnu. Postavićemo apriornu raspodelu nad $f$, kada izaberemo novu tačku i evaluiramo funkciju u toj tački ažuriraćemo raspodelu kako bi dobili aposteriornu raspodelu.
+Na osnovu nekog broja evaluacija funkcije $f$ i tačaka u kojima je evaluirana se dobija raspodela nad $f$. Ova raspodela nam daje u suštini \textit{surogat} funkciju. Ova \textit{surogat} funkcija je aproksimacija koja je značajno lakša da se evaluira nego $f$. Korisno je napomenuti da ovo nije suštinski za tehnike Bajesovske optimizacije.
+Postoje i druge optimizacione metode koje se zasnivaju na pronalaženju i optimizaciji \textit{surogat} funkcija \parencite{booker1999rigorous}.
+
+Algoritmi zasnovani na idejama Bajesovske optimizacije se suštinski razlikuju u tome kako postavljaju raspodelu nad $f$ i kako biraju narednu tačku za evaluaciju na osnovu postavljene raspodele. Metoda koja je implementirana u ovom radu se zasniva na tehnici GP (\textit{Gaussian Process}) regression za određivanje raspodele nad $f$.
+Na osnovu raspodele koja je određena nad $f$ potrebno je odabrati sledeću tačku u kojoj će se evaluirati $f$. Suštinski, prilikom odabira naredne tačke potrebno je balansirati koliko se istražuje deo prostora gde je nesigurnost funkcije velika i koliko se eksploatišu delovi funkcije za koje je već poznato da su potencijalno blizu optimalne vrednosti.
+U ovom radu je u te svrhe implementiran tzv. princip očekivanog poboljšanja (EI - Expected Improvement).
+
+\subsection{Ograničenja}
+Metoda Bajesovske optimizacije koja je opisana i implementirana u okviru ovog rada rešava problem:
+$$\min_{x \in A}f(x)$$
+Metoda se može primeniti ukoliko je ispunjeno sledeće:
+\begin{itemize}
+  \item Za neko $x$ je lako proveriti da li pripada domenu $A$. Konkretno u ovoj implementaciji se pretpostavlja da je domen oblika $\{ x \in \mathbb{R}^d | l_i \leq x \leq h_i  \}$.
+  \item Funkcija $f$ je neprekidna
+\end{itemize}
+
+\section{Bajesovska optimizacija GP-EI}
+
+
+\subsection{GP Regresija}
+
+\subsection{Akviziciona funkcija, EI}
+
+\section{Implementacija}
+
+\section{Eksperimenti}
+
+\subsection{Postavka}
+
+\subsection{Rezultati}
+
+\subsection{Diskusija}
+
+\section{Zakljucak}
+
+\printbibliography
 
 \end{document}
+
+
