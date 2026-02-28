@@ -174,7 +174,56 @@ $$
 \end{align*}
 Ovim smo dobili aposteriori raspodelu što ćemo koristiti nadalje kako bismo odredili najpovoljniji deo prostora da uzorkujemo narednu tačku.
 \subsection{Akviziciona funkcija, EI}
+GP regresijom dobijamo aposteriornu raspodelu $f(x)\mid Y$. Sledeći korak u Bajesovskoj optimizaciji je da na osnovu tih informacija izaberemo novu tačku za evaluiranje $f$.
+Da bismo doneli tu odluku potrebno je da balansiramo između \enquote{istraživanja} delova funkcije koji nam nisu dobro poznati (velika varijansa) i eksploatisanja delova funkcije gde imamo manju varijansu, a veliku očekivanu vrednost (Explore - Exploit dilemma).
+U te svrhe koristićemo tzv. Akvizicionu funkciju (Acquisition function).
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/gp_explore_exploit_dilema.pdf}
+  \caption{Explore-Exploit dilema u Bajesovskoj optimizaciji}
+  \label{fig:gp-explore-exploit}
+\end{figure}
+\FloatBarrier
 
+U ovom radu koristimo princip očekivanog poboljšanja (EI -- \textit{Expected Improvement}).
+Neka je trenutna najbolja viđena vrednost $m = \min_{i=1,\dots,n} (y_i)$ (minimizujemo $f$).
+Za problem minimizacije prirodno je definisati poboljšanje u tački $x$ kao
+$$
+  I(x) = \max(m - f(x), 0).
+$$
+
+Očekivano poboljšanje je onda:
+$$
+  \mathrm{EI}(x)=\mathbb{E}[I(x)\mid Y]
+  =\mathbb{E}[\max(m-f(x),0)\mid Y].
+$$
+Označimo slučajnu promenljivu
+$$
+  F := f(x)\mid Y \sim \mathcal{N}(\mu(x),\sigma^2(x)).
+$$
+Tada je:
+$$
+  \mathrm{EI}(x)=\int_{-\infty}^{+\infty}\max(m-u,0)\,f_F(u)\,du.
+$$
+Pošto je $\max(m-u,0)=0$ za $u>m$, integral se svodi na
+$$
+  \mathrm{EI}(x)=\int_{-\infty}^{m}(m-u)\,f_F(u)\,du
+  = m\!\int_{-\infty}^{m} f_F(u)\,du-\int_{-\infty}^{m}u\,f_F(u)\,du.
+$$
+Kako je $f_F(u)$ funkcija raspodele normalne raspodele $\mathcal{N}(\mu(x),\sigma^2(x))$ ovaj celokupan integral se može lako svesti na:
+$$\mathrm{EI}(x) = (m-\mu(x))\Phi(z)+\sigma(x)\phi(z)$$
+Gde su $\Phi$ - kumulativna funkcija raspodele i $\phi$ - funkcija raspodele standardne normalne raspodele i $z = \frac{m - \mu(x)}{\sigma(x)}$.
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/gp_ei_2x1.pdf}
+  \caption{Primer vrednosti očekivanog poboljšanja na jednodimenzionoj funkciji}
+  \label{fig:gp-ei-example}
+\end{figure}
+\FloatBarrier
+Sledeću tačku biramo maksimizacijom EI na domenu:
+$$
+  x_{n+1} = \arg\max_{x\in A} \mathrm{EI}(x).
+$$
 \section{Implementacija}
 
 \section{Eksperimenti}

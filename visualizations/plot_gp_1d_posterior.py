@@ -1,8 +1,4 @@
 from __future__ import annotations
-from style import PALETTE, use_blue_theme
-from bayesopt.kernels import RBFKernel
-from bayesopt.gaussian_process import GaussianProcessRegressor
-from matplotlib import pyplot as plt
 
 import argparse
 import os
@@ -20,6 +16,12 @@ os.environ.setdefault("MPLCONFIGDIR", str(MPLCONFIG_DIR))
 
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
+
+from matplotlib import pyplot as plt
+
+from bayesopt.gaussian_process import GaussianProcessRegressor
+from bayesopt.kernels import RBFKernel
+from style import PALETTE, use_blue_theme
 
 
 def true_function(x: np.ndarray) -> np.ndarray:
@@ -102,7 +104,7 @@ def main() -> None:
         color=PALETTE["mean"],
         linestyle="--",
         linewidth=2.2,
-        label="Ocekivana vrednost",
+        label="Očekivana vrednost",
     )
     ax.plot(
         x_plot[:, 0],
