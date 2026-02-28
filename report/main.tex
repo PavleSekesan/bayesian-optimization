@@ -12,6 +12,10 @@
 \usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage{csquotes}
+\usepackage{placeins}
+\usepackage[most]{tcolorbox}
+\usepackage{xcolor}
+\usepackage{xparse}
 \usepackage[
   backend=biber,
   style=authoryear,
@@ -25,6 +29,27 @@
   top=25mm,
   bottom=30mm
 }
+
+\definecolor{themeblue}{HTML}{1F77B4}
+
+\newtcolorbox{definitionblock}{
+  enhanced,
+  breakable,
+  colback=white,
+  colframe=white,
+  boxrule=0pt,
+  borderline west={2.5pt}{0pt}{themeblue},
+  left=10pt, right=8pt, top=6pt, bottom=6pt,
+  before skip=8pt, after skip=8pt
+}
+
+\NewDocumentCommand{\defblock}{m +m}{%
+  \begin{definitionblock}
+  \textbf{Definicija: #1}\par 
+  #2
+  \end{definitionblock}
+}
+
 
 \onehalfspacing
 \setlength{\parindent}{0pt}
@@ -73,7 +98,81 @@ Metoda se može primeniti ukoliko je ispunjeno sledeće:
 
 
 \subsection{GP Regresija}
-
+GP (Gaussian process) regresija je metoda interpolacije zasnovana na \textit{Gausovim procesima}. GP regresija je čest pristup za određivanje surogat funkcije u Bajesovskoj optimizaciji.
+Neformalno govoreći, pomoću GP regresije odredićemo očekivanu vrednost funkcije na osnovu prethodno viđenih podataka i takođe možemo odrediti varijansu pa i interval poverenja oko te očekivane vrednosti.
+Veća varijansa odnosno širi interval poverenja znači da \enquote{nismo sigurni} kako funkcija izgleda u tom delu, a manja varijansa da smo sigurniji u oblik funkcije. Videti \ref{fig:gp-1d-posterior} za primer.
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/gp_1d_posterior}
+  \caption{Primer GP regresije primenjene na jednodimenzionoj funkciji.}
+  \label{fig:gp-1d-posterior}
+\end{figure}
+\FloatBarrier
+Formalnije, kako nemamo nikakvih informacija o funkciji osim par vrednosti u uzorkovanim tačkama pretpostavićemo da je funkcija $f$ Gausov proces.
+\defblock{Gausov proces}{
+  Gausov proces je stohastički proces takav da za svaki konačni niz $x_1,...,x_n$ važi $(x_1,...,x_n) \sim \mathcal{N}_n(\mu, \Sigma)$. Gde su: $\mu = (\mathbb{E}\left[X_1\right], ... , \mathbb{E}\left[X_n\right])$ i $\Sigma_{i,j} = \text{Cov}\left[X_i, X_j\right]$
+}
+U slučaju GP regresije pretpostavka je da $f(x_1),...,f(x_n) \sim \mathcal{N}_n(\mu(X), \Sigma(X))$. Dodatno, često se uzima da je $\mu(X) = 0$. Matrica kovarijansi $\Sigma$ mora biti pozitivno semidefinitna kako bi normalna raspodela bila ispravno definisana.
+Umesto matrice kovarijansi koristi se pozitivno semidefinitni kernel kao na primer: RBF kernel, polinomski, linearni... Matricu kovarijansi modelujemo na ovaj način jer želimo da možemo da vršimo ekstrapolaciju van tačaka u kojima je uzorkovana funkcija, a za to je potrebno da možemo da odredimo vrednost kovarijanse između uzorkovane tačke $x_i$ i neke proizvoljne tačke $x$.
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/kerneli_2d_1x3.pdf}
+  \caption{Primer nekih često korišćenih kernela: RBF kernel $(l=0.9, a=1.0)$, polinomski kernel $(\alpha=0.4, c=1.0, \text{stepen}=3)$ i linearni kernel $(\sigma_v^2=0.8, \sigma_b^2=0.2)$.}
+  \label{fig:kernel-examples}
+\end{figure}
+\FloatBarrier
+Kako bismo odredili očekivanu vrednost funkcije i varijansu potrebno je da odredimo aposteriornu raspodelu: $f(x) \vert Y = f(X)$, gde su: $X$ do sada uzorkovane tačke, a $Y$ vrednosti funkcije $f$ u tim tačkama. Formalnije, pretpostavili smo da je $Y \sim \mathcal{N}_n(0, K(X,X))$. Pa će važiti i za novu tačku $(y=f(x), x)$:
+$$
+  \begin{pmatrix}
+    y \\
+    Y
+  \end{pmatrix}
+  \sim
+  \mathcal{N}
+  \left(
+  \begin{pmatrix}
+      0 \\
+      0
+    \end{pmatrix},
+  \begin{pmatrix}
+      K(x,x) & K(X,x)^\top \\
+      K(X,x) & K(X,X)
+    \end{pmatrix}
+  \right)
+$$
+Želimo da odredimo raspodelu $y \vert Y$. Za višedimenzione normalne raspodele date u obliku:
+$$
+  \begin{pmatrix}
+    x \\
+    y
+  \end{pmatrix}
+  \sim
+  \mathcal{N}
+  \left(
+  \begin{pmatrix}
+      \mu_x \\
+      \mu_y
+    \end{pmatrix},
+  \begin{pmatrix}
+      A & C^\top \\
+      C & B
+    \end{pmatrix}
+  \right)
+$$
+Je poznato \parencite{williams2006gaussian} da važi:
+$$
+  x \vert y \sim \mathcal{N}(\mu_x + C^\top B^{-1}(y-\mu_y), A - C^\top B^{-1}C)
+$$
+Što je u našem slučaju:
+$$
+  y \vert Y \sim \mathcal{N}(K(X,x)^\top K(X,X)^{-1}Y, K(x,x) - K(X,x)^\top K(X,X)^{-1}K(X,x))
+$$
+Što možemo da zapišemo i kao
+\begin{align*}
+  \mu(x)      & = K(X,x)^\top K(X,X)^{-1}Y               \\
+  \sigma^2(x) & = K(x,x) - K(X,x)^\top K(X,X)^{-1}K(X,x)
+\end{align*}
+Ovim smo dobili aposteriori raspodelu što ćemo koristiti nadalje kako bismo odredili najpovoljniji deo prostora da uzorkujemo narednu tačku.
 \subsection{Akviziciona funkcija, EI}
 
 \section{Implementacija}
