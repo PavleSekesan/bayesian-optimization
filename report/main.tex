@@ -172,10 +172,10 @@ $$
   y \vert Y \sim \mathcal{N}(K(X,x)^\top K(X,X)^{-1}Y, K(x,x) - K(X,x)^\top K(X,X)^{-1}K(X,x))
 $$
 Što možemo da zapišemo i kao
-\begin{align*}
-  \mu(x)      & = K(X,x)^\top K(X,X)^{-1}Y               \\
-  \sigma^2(x) & = K(x,x) - K(X,x)^\top K(X,X)^{-1}K(X,x)
-\end{align*}
+\begin{align}
+  \mu(x)      & = K(X,x)^\top K(X,X)^{-1}Y \nonumber                              \\
+  \sigma^2(x) & = K(x,x) - K(X,x)^\top K(X,X)^{-1}K(X,x) \label{eq:gp-regression}
+\end{align}
 Ovim smo dobili aposteriori raspodelu što ćemo koristiti nadalje kako bismo odredili najpovoljniji deo prostora da uzorkujemo narednu tačku.
 \subsection{Akviziciona funkcija, EI}\label{subsection:ei}
 GP regresijom dobijamo aposteriornu raspodelu $f(x)\mid Y$. Sledeći korak u Bajesovskoj optimizaciji je da na osnovu tih informacija izaberemo novu tačku za evaluiranje $f$.
@@ -260,7 +260,58 @@ L-BFGS se u ovom slučaju pokreće više puta iz različitih početnih tačaka k
   \label{fig:gp-full-example}
 \end{figure}
 \FloatBarrier
+\subsection{Implementacija GP regresije}
+Kao što je pokazano u \ref{eq:gp-regression} aposteriorna srednja vrednost i varijansa imaju oblik:
+\begin{align}
+  \mu(x)      & = m_0 + K(x,X)^\top K(X,X)^{-1}\big(y - m_0\mathbf{I}), \label{eq:gp-mean} \\
+  \sigma^2(x) & = K(x,x) - K(x,X)^\top K(X,X)^{-1}K(x,X). \label{eq:gp-var}
+\end{align}
+Direktno računanje inverza matrice u \eqref{eq:gp-mean} i \eqref{eq:gp-var} je numerički nepovoljno, pa u implementaciji koristimo ekvivalentnu formu zasnovanu na Cholesky faktorizaciji.
+Neka je $X\in\mathbb{R}^{n\times d}$ skup tačaka u kojima je uzorkovana funkcija, $y\in\mathbb{R}^n$ vektor vrednosti funkcije u tim tačkama i $K = K(X,X)$.
+Kako je $K(\cdot,\cdot)$ kernel onda je i matrica $K$ pozitivno semidefinitna pa ima Cholesky dekompoziciju:
+\begin{equation*}
+  K = LL^\top.
+\end{equation*}
 
+U izrazu \eqref{eq:gp-mean} pojavljuje se vektor
+\begin{equation*}
+  \alpha = K^{-1}\big(y - m_0\mathbf{I}).
+\end{equation*}
+Umesto eksplicitnog inverza, $\alpha$ dobijamo rešavanjem dva trougaona sistema:
+\begin{align*}
+  L v           & = y - m_0\mathbf{I}, \\
+  L^\top \alpha & = v.
+\end{align*}
+
+\paragraph{Predikcija (srednja vrednost).}
+Za bilo koju upitnu tačku $x$ važi
+\begin{equation*}
+  \mu(x) = m_0 + K(x,X)^\top \alpha.
+\end{equation*}
+
+\paragraph{Predikcija (varijansa).}
+Formula \eqref{eq:gp-var} sadrži kvadratnu formu
+\[
+  K(x,X)^\top K^{-1} K(x,X).
+\]
+Označimo $k_x = K(x,X)\in\mathbb{R}^{n}$.
+Ako rešimo sistem
+\begin{equation*}
+  L w = k_x
+\end{equation*}
+onda je $w = L^{-1}k_x$ i važi
+\begin{align*}
+  k_x^\top K^{-1} k_x
+   & = k_x^\top (LL^\top)^{-1} k_x        \\
+   & = k_x^\top L^{-\top}L^{-1}k_x        \\
+   & = (L^{-1}k_x)^\top (L^{-1}k_x)       \\
+   & = \|L^{-1}k_x\|_2^2 \;=\; \|w\|_2^2.
+\end{align*}
+Pa $\sigma^2(x)$ nalazimo kao:
+\begin{equation}
+  \sigma^2(x) = K(x,x) - \|w\|_2^2, \qquad \text{gde je } Lw=K(x,X). \nonumber
+\end{equation}
+Gde $w$ određujemo rešavanjem trougaonog sistema: $Lw=K(x,X)$.
 \section{Eksperimenti}
 
 \subsection{Postavka}
