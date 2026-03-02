@@ -16,6 +16,10 @@
 \usepackage[most]{tcolorbox}
 \usepackage{xcolor}
 \usepackage{xparse}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\floatname{algorithm}{Algoritam}
+\algrenewcommand\algorithmicrequire{\textbf{Ulaz:}}
 \usepackage[
   backend=biber,
   style=authoryear,
@@ -173,7 +177,7 @@ $$
   \sigma^2(x) & = K(x,x) - K(X,x)^\top K(X,X)^{-1}K(X,x)
 \end{align*}
 Ovim smo dobili aposteriori raspodelu što ćemo koristiti nadalje kako bismo odredili najpovoljniji deo prostora da uzorkujemo narednu tačku.
-\subsection{Akviziciona funkcija, EI}
+\subsection{Akviziciona funkcija, EI}\label{subsection:ei}
 GP regresijom dobijamo aposteriornu raspodelu $f(x)\mid Y$. Sledeći korak u Bajesovskoj optimizaciji je da na osnovu tih informacija izaberemo novu tačku za evaluiranje $f$.
 Da bismo doneli tu odluku potrebno je da balansiramo između \enquote{istraživanja} delova funkcije koji nam nisu dobro poznati (velika varijansa) i eksploatisanja delova funkcije gde imamo manju varijansu, a veliku očekivanu vrednost (Explore - Exploit dilemma).
 U te svrhe koristićemo tzv. Akvizicionu funkciju (Acquisition function).
@@ -210,21 +214,52 @@ $$
   \mathrm{EI}(x)=\int_{-\infty}^{m}(m-u)\,f_F(u)\,du
   = m\!\int_{-\infty}^{m} f_F(u)\,du-\int_{-\infty}^{m}u\,f_F(u)\,du.
 $$
-Kako je $f_F(u)$ funkcija raspodele normalne raspodele $\mathcal{N}(\mu(x),\sigma^2(x))$ ovaj celokupan integral se može lako svesti na:
+Kako je $f_F(u)$ funkcija raspodele normalne raspodele $\mathcal{N}(\mu(x),\sigma^2(x))$ ovaj celokupan integral se može lako svesti na \parencite{snoek2012practical} :
 $$\mathrm{EI}(x) = (m-\mu(x))\Phi(z)+\sigma(x)\phi(z)$$
 Gde su $\Phi$ - kumulativna funkcija raspodele i $\phi$ - funkcija raspodele standardne normalne raspodele i $z = \frac{m - \mu(x)}{\sigma(x)}$.
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/gp_ei_2x1.pdf}
-  \caption{Primer vrednosti očekivanog poboljšanja na jednodimenzionoj funkciji}
+  \caption{Primer vrednosti očekivanog poboljšanja za jednodimenzionu funkciju}
   \label{fig:gp-ei-example}
 \end{figure}
 \FloatBarrier
 Sledeću tačku biramo maksimizacijom EI na domenu:
 $$
-  x_{n+1} = \arg\max_{x\in A} \mathrm{EI}(x).
+  x_{n+1} = \arg\max_{x\in D} \mathrm{EI}(x).
 $$
 \section{Implementacija}
+\subsection{Opšta procedura optimizacije}
+Kada se Bajesovska optimizacija implementira pomoću Gausovog procesa i akvizicione funkcije očekivanog poboljšanja algoritam je sledeći:
+\begin{algorithm}[H]
+  \caption{Bayesian optimization sa GP i EI (minimizacija)}
+  \label{alg:gp-ei}
+  \begin{algorithmic}[1]
+    \Require funkcija $f$, budžet $N$, kernel $K(x,y)$
+    \State $X=\{\}$
+    \State $Y=\{\}$
+    \For{$t=1$ \textbf{to} $N$}
+    \State $\mu(x), \sigma(x) \gets \mathrm{fit\_gp}(X,Y,K)$
+    \State $x_{t}\gets \arg\max_{x\in A}\mathrm{EI}(x, \mu(x), \sigma(x))$
+    \State $y_{t}\gets f(x_{t})$
+    \State $X\gets X\cup\{x_{t}\}$,\quad $Y\gets Y\cup\{y_{t}\}$
+    \EndFor
+    \State $x_{\text{best}}\gets \arg\min_{x_i\in X} f(x_i)$
+    \State \Return $x_{\text{best}},\ \min(Y)$
+  \end{algorithmic}
+\end{algorithm}
+U prethodno opisanom algoritmu \ref{alg:gp-ei} ostalo je još da definišemo kako se maksimizuje akviziciona funkcija EI.
+Kao što je pokazano u \ref{subsection:ei} izračunavanje očekivanog poboljšanja u nekoj datoj tački je relativno jednostavno.
+Međutim, kao što se može videti na slici \ref{fig:gp-ei-example} sama funkcija EI takođe nema neki povoljan oblik za maksimizaciju u opštem slučaju.
+Stoga se za maksimizaciju funkcije EI koristi neki drugi optimizacioni metod. Jedna metoda koja se koristi u praksi \parencite{balandat2020botorch} je L-BFGS.
+L-BFGS se u ovom slučaju pokreće više puta iz različitih početnih tačaka kako bi se što bolje optimizovala funkcija očekivanog poboljšanja. U ovom projektu korišćen je algoritam L-BFGS i pokretan je iz više početnih tačaka.
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/bo_run_4x2.pdf}
+  \caption{Primer celokupnog izvršavanja algoritma Bajesovske optimizacije za minimizaciju 1D funkcije. Prikaz u trenucima kada je uzorkovano $n=0, 1, 4$ i $10$ tačaka.}
+  \label{fig:gp-full-example}
+\end{figure}
+\FloatBarrier
 
 \section{Eksperimenti}
 
