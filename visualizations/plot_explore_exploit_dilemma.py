@@ -86,7 +86,6 @@ def main() -> None:
 
     gp = GaussianProcessRegressor(
         kernel=RBFKernel(length_scale=0.9, amplitude=1.0),
-        noise_variance=1e-4,
         mean_value=0.0,
         jitter=1e-8,
     )

@@ -9,17 +9,13 @@ class GaussianProcessRegressor:
     def __init__(
         self,
         kernel: Kernel,
-        noise_variance: float,
         mean_value: float = 0.0,
         jitter: float = 1e-8,
     ) -> None:
-        if noise_variance < 0.0:
-            raise ValueError("noise_variance must be non-negative.")
         if jitter <= 0.0:
             raise ValueError("jitter must be positive.")
 
         self.kernel = kernel
-        self.noise_variance = noise_variance
         self.mean_value = mean_value
         self.jitter = jitter
 
@@ -86,7 +82,7 @@ class GaussianProcessRegressor:
 
         for _ in range(8):
             regularized = np.asarray(gram, dtype=np.float64).copy()
-            regularized[diagonal_indices] += self.noise_variance + jitter
+            regularized[diagonal_indices] += jitter
             try:
                 return np.linalg.cholesky(regularized)
             except np.linalg.LinAlgError:

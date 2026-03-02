@@ -16,7 +16,6 @@ from bayesopt.types import FloatArray, ObjectiveFunction
 class GaussianProcessConfig:
     length_scale: float = 0.5
     amplitude: float = 1.0
-    noise_variance: float = 1e-6
     mean_value: float = 0.0
     jitter: float = 1e-8
 
@@ -117,7 +116,6 @@ class BayesianOptimizer:
         )
         return GaussianProcessRegressor(
             kernel=kernel,
-            noise_variance=self._gp_config.noise_variance,
             mean_value=self._gp_config.mean_value,
             jitter=self._gp_config.jitter,
         )

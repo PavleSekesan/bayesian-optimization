@@ -8,19 +8,18 @@ from bayesopt.kernels import RBFKernel
 
 
 def test_predict_requires_fit() -> None:
-    gp = GaussianProcessRegressor(kernel=RBFKernel(length_scale=0.5, amplitude=1.0), noise_variance=1e-6)
+    gp = GaussianProcessRegressor(kernel=RBFKernel(length_scale=0.5, amplitude=1.0))
 
     with pytest.raises(RuntimeError):
         gp.predict(np.array([[0.0]], dtype=np.float64))
 
 
-def test_gp_interpolates_training_points_with_tiny_noise() -> None:
+def test_gp_interpolates_training_points_with_tiny_jitter() -> None:
     x_train = np.array([[0.0], [0.3], [0.8]], dtype=np.float64)
     y_train = np.array([0.0, 0.8, -0.1], dtype=np.float64)
 
     gp = GaussianProcessRegressor(
         kernel=RBFKernel(length_scale=0.3, amplitude=1.0),
-        noise_variance=1e-12,
         jitter=1e-10,
     )
     gp.fit(x_train, y_train)
@@ -36,7 +35,7 @@ def test_gp_predict_shape() -> None:
     x_train = np.array([[0.0], [1.0]], dtype=np.float64)
     y_train = np.array([0.0, 1.0], dtype=np.float64)
 
-    gp = GaussianProcessRegressor(kernel=RBFKernel(length_scale=0.4, amplitude=1.0), noise_variance=1e-6)
+    gp = GaussianProcessRegressor(kernel=RBFKernel(length_scale=0.4, amplitude=1.0))
     gp.fit(x_train, y_train)
 
     mean, variance = gp.predict(np.array([[0.1], [0.5], [0.9]], dtype=np.float64))
