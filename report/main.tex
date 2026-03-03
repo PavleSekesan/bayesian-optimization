@@ -78,16 +78,16 @@ Pavle Sekešan 87/2022 \\
 
 \section{Uvod}
 Bajesovska optimizacija (\textit{Bayesian optimization}) je porodica algoritama za \textit{Black box}\footnote{U ovom kontekstu Black box optimizacija odnosi se na optimizaciju funkcije bez poznavanja ikakvih njenih svojstava osim vrednosti u odabranim tačkama.} optimizaciju funkcija.
-Bajesovska optimizacija se primenjuje kao vrlo generalna metoda u slučajevima kada ne možemo pretpostaviti ništa dodatno u vezi funkcije koja se optimizuje - u praksi ova metoda optimizacije se primenjuje kada je funkcija neprekidna, nije diferencijabilna (ili je presporo evaluirati njen izvod), skupa da se evaluira i domen funkcije je nisko-dimenzion $d \leq 20$ \parencite{frazier2018tutorialbayesianoptimization}.
-Česta upotreba Bajesovske optimizacije je kao tehnika za nalaženje optimalnih hiperparametara modela koji se koriste u mašinskom učenju --- broj i veličina slojeva neuronske mreže, aktivacione funkcije, maksimalna dubina stabala odlučivanja...
+Bajesovska optimizacija se primenjuje kao vrlo opšta metoda u situacijama kada o funkciji koja se optimizuje ne možemo pretpostaviti gotovo ništa dodatno. U praksi se najčešće koristi kada je funkcija neprekidna, nije diferencijabilna (ili je izvod preskup za računanje), skupa je za evaluaciju i definisana je na niskodimenzionom domenu ($d \leq 20$) \parencite{frazier2018tutorialbayesianoptimization}.
+Bajesovska optimizacija se često koristi kao tehnika za nalaženje optimalnih hiperparametara modela mašinskog učenja, kao što su broj i veličina slojeva neuronske mreže, izbor aktivacione funkcije i maksimalna dubina stabala odlučivanja.
 
-Osnovna ideja algoritama Bajesovske optimizacije je sledeća: Kako funkcija $f$ koja se optimizuje nije poznata tretiraćemo je kao nasumičnu. Postavićemo apriornu raspodelu nad $f$, kada izaberemo novu tačku i evaluiramo funkciju u toj tački ažuriraćemo raspodelu kako bi dobili aposteriornu raspodelu.
-Na osnovu nekog broja evaluacija funkcije $f$ i tačaka u kojima je evaluirana se dobija raspodela nad $f$. Ova raspodela nam daje u suštini \textit{surogat} funkciju. Ova \textit{surogat} funkcija je aproksimacija koja je značajno lakša da se evaluira nego $f$. Korisno je napomenuti da ovo nije suštinski za tehnike Bajesovske optimizacije.
-Postoje i druge optimizacione metode koje se zasnivaju na pronalaženju i optimizaciji \textit{surogat} funkcija \parencite{booker1999rigorous}.
+Osnovna ideja algoritama Bajesovske optimizacije je sledeća: pošto funkcija $f$ nije poznata, tretiramo je kao nasumičnu. Postavlja se apriorna raspodela nad $f$, a zatim se, nakon svake nove evaluacije funkcije, ta raspodela ažurira u aposteriornu.
+Na osnovu do tada evaluiranih tačaka dobija se raspodela nad $f$, odnosno \textit{surogat} funkcija. Ta surogat funkcija predstavlja aproksimaciju koja je značajno jeftinija za evaluaciju od originalne funkcije $f$.
+Ovo nije suštinski za tehnike Bajesovske optimizacije, postoje i druge optimizacione metode koje se zasnivaju na pronalaženju i optimizaciji \textit{surogat} funkcija \parencite{booker1999rigorous}.
 
-Algoritmi zasnovani na idejama Bajesovske optimizacije se suštinski razlikuju u tome kako postavljaju raspodelu nad $f$ i kako biraju narednu tačku za evaluaciju na osnovu postavljene raspodele. Metoda koja je implementirana u ovom radu se zasniva na tehnici GP (\textit{Gaussian Process}) regression za određivanje raspodele nad $f$.
-Na osnovu raspodele koja je određena nad $f$ potrebno je odabrati sledeću tačku u kojoj će se evaluirati $f$. Suštinski, prilikom odabira naredne tačke potrebno je balansirati koliko se istražuje deo prostora gde je nesigurnost funkcije velika i koliko se eksploatišu delovi funkcije za koje je već poznato da su potencijalno blizu optimalne vrednosti.
-U ovom radu je u te svrhe implementiran tzv. princip očekivanog poboljšanja (EI - Expected Improvement).
+Algoritmi zasnovani na idejama Bajesovske optimizacije najviše se razlikuju po tome kako modeluju raspodelu nad $f$ i kako, na osnovu te raspodele, biraju narednu tačku za evaluaciju.
+Metoda implementirana u ovom radu zasniva se na GP (\textit{Gaussian Process}) regresiji za modelovanje raspodele nad $f$.
+Prilikom izbora naredne tačke potrebno je balansirati istraživanje delova prostora u kojima je nesigurnost velika i eksploataciju delova za koje je već poznato da su blizu optimuma. U ovom radu za to koristimo princip očekivanog poboljšanja (EI -- \textit{Expected Improvement}).
 
 \subsection{Ograničenja}
 Metoda Bajesovske optimizacije koja je opisana i implementirana u okviru ovog rada rešava problem:
@@ -102,9 +102,9 @@ Metoda se može primeniti ukoliko je ispunjeno sledeće:
 
 
 \subsection{GP Regresija}
-GP (Gaussian process) regresija je metoda interpolacije zasnovana na \textit{Gausovim procesima}. GP regresija je čest pristup za određivanje surogat funkcije u Bajesovskoj optimizaciji.
-Neformalno govoreći, pomoću GP regresije odredićemo očekivanu vrednost funkcije na osnovu prethodno viđenih podataka i takođe možemo odrediti varijansu pa i interval poverenja oko te očekivane vrednosti.
-Veća varijansa odnosno širi interval poverenja znači da \enquote{nismo sigurni} kako funkcija izgleda u tom delu, a manja varijansa da smo sigurniji u oblik funkcije. Videti \ref{fig:gp-1d-posterior} za primer.
+GP (Gaussian Process) regresija je metoda interpolacije zasnovana na \textit{Gausovim procesima} i čest je izbor za konstrukciju surogat funkcije u Bajesovskoj optimizaciji.
+Neformalno, GP regresija nam daje očekivanu vrednost funkcije na osnovu prethodno viđenih podataka, kao i varijansu, odnosno interval poverenja oko te očekivane vrednosti.
+Veća varijansa (širi interval poverenja) znači da smo manje sigurni u oblik funkcije u tom delu prostora, dok manja varijansa znači veću sigurnost. Videti \ref{fig:gp-1d-posterior} za primer.
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/gp_1d_posterior}
@@ -112,12 +112,12 @@ Veća varijansa odnosno širi interval poverenja znači da \enquote{nismo sigurn
   \label{fig:gp-1d-posterior}
 \end{figure}
 \FloatBarrier
-Formalnije, kako nemamo nikakvih informacija o funkciji osim par vrednosti u uzorkovanim tačkama pretpostavićemo da je funkcija $f$ Gausov proces.
+Formalnije, pošto nemamo informacije o funkciji osim nekoliko vrednosti u uzorkovanim tačkama, pretpostavljamo da je funkcija $f$ Gausov proces.
 \defblock{Gausov proces}{
-  Gausov proces je stohastički proces takav da za svaki konačni niz $x_1,...,x_n$ važi $(x_1,...,x_n) \sim \mathcal{N}_n(\mu, \Sigma)$. Gde su: $\mu = (\mathbb{E}\left[X_1\right], ... , \mathbb{E}\left[X_n\right])$ i $\Sigma_{i,j} = \text{Cov}\left[X_i, X_j\right]$
+  Gausov proces je stohastički proces takav da za svaki konačni niz slučajnih promenljivih $X_1,\ldots,X_n$ važi $(X_1,\ldots,X_n) \sim \mathcal{N}_n(\mu, \Sigma)$, gde su $\mu = (\mathbb{E}\left[X_1\right], \ldots, \mathbb{E}\left[X_n\right])$ i $\Sigma_{i,j} = \mathrm{Cov}\left[X_i, X_j\right]$.
 }
-U slučaju GP regresije pretpostavka je da $f(x_1),...,f(x_n) \sim \mathcal{N}_n(\mu(X), \Sigma(X))$. Dodatno, često se uzima da je $\mu(X) = 0$. Matrica kovarijansi $\Sigma$ mora biti pozitivno semidefinitna kako bi normalna raspodela bila ispravno definisana.
-Umesto matrice kovarijansi koristi se pozitivno semidefinitni kernel kao na primer: RBF kernel, polinomski, linearni... Matricu kovarijansi modelujemo na ovaj način jer želimo da možemo da vršimo ekstrapolaciju van tačaka u kojima je uzorkovana funkcija, a za to je potrebno da možemo da odredimo vrednost kovarijanse između uzorkovane tačke $x_i$ i neke proizvoljne tačke $x$.
+U okviru GP regresije pretpostavlja se da važi $f(x_1),\ldots,f(x_n) \sim \mathcal{N}_n(\mu(X), \Sigma(X))$. U praksi se često uzima i $\mu(X)=0$. Matrica kovarijansi $\Sigma$ mora biti pozitivno semidefinitna da bi normalna raspodela bila ispravno definisana.
+Umesto eksplicitnog zadavanja matrice kovarijansi, koristi se pozitivno semidefinitni kernel (npr. RBF, polinomski, linearni). Matricu kovarijansi modelujemo na ovaj način jer želimo da možemo da vršimo ekstrapolaciju van tačaka u kojima je uzorkovana funkcija, a za to je potrebno da možemo da odredimo vrednost kovarijanse između uzorkovane tačke $x_i$ i neke proizvoljne tačke $x$.
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/kerneli_2d_1x3.pdf}
@@ -125,7 +125,7 @@ Umesto matrice kovarijansi koristi se pozitivno semidefinitni kernel kao na prim
   \label{fig:kernel-examples}
 \end{figure}
 \FloatBarrier
-Kako bismo odredili očekivanu vrednost funkcije i varijansu potrebno je da odredimo aposteriornu raspodelu: $f(x) \vert Y = f(X)$, gde su: $X$ do sada uzorkovane tačke, a $Y$ vrednosti funkcije $f$ u tim tačkama. Formalnije, pretpostavili smo da je $Y \sim \mathcal{N}_n(0, K(X,X))$. Pa će važiti i za novu tačku $(y=f(x), x)$:
+Da bismo odredili očekivanu vrednost funkcije i varijansu, potrebno je da odredimo aposteriornu raspodelu $f(x)\vert Y=f(X)$, gde su $X$ do sada uzorkovane tačke, a $Y$ odgovarajuće vrednosti funkcije $f$. Pošto pretpostavljamo da je $Y \sim \mathcal{N}_n(0, K(X,X))$, za novu tačku $(y=f(x), x)$ važi:
 $$
   \begin{pmatrix}
     y \\
@@ -163,24 +163,25 @@ $$
     \end{pmatrix}
   \right)
 $$
-Je poznato \parencite{williams2006gaussian} da važi:
+poznato je \parencite{williams2006gaussian} da važi:
 $$
   x \vert y \sim \mathcal{N}(\mu_x + C^\top B^{-1}(y-\mu_y), A - C^\top B^{-1}C)
 $$
-Što je u našem slučaju:
+U našem slučaju to daje:
 $$
   y \vert Y \sim \mathcal{N}(K(X,x)^\top K(X,X)^{-1}Y, K(x,x) - K(X,x)^\top K(X,X)^{-1}K(X,x))
 $$
-Što možemo da zapišemo i kao
+što možemo zapisati i kao:
 \begin{align}
   \mu(x)      & = K(X,x)^\top K(X,X)^{-1}Y \nonumber                              \\
   \sigma^2(x) & = K(x,x) - K(X,x)^\top K(X,X)^{-1}K(X,x) \label{eq:gp-regression}
 \end{align}
-Ovim smo dobili aposteriori raspodelu što ćemo koristiti nadalje kako bismo odredili najpovoljniji deo prostora da uzorkujemo narednu tačku.
+
+Time dobijamo aposteriornu raspodelu, koju ćemo nadalje koristiti kako bismo odredili najpovoljniji deo prostora da uzorkujemo narednu tačku.
 \subsection{Akviziciona funkcija, EI}\label{subsection:ei}
-GP regresijom dobijamo aposteriornu raspodelu $f(x)\mid Y$. Sledeći korak u Bajesovskoj optimizaciji je da na osnovu tih informacija izaberemo novu tačku za evaluiranje $f$.
-Da bismo doneli tu odluku potrebno je da balansiramo između \enquote{istraživanja} delova funkcije koji nam nisu dobro poznati (velika varijansa) i eksploatisanja delova funkcije gde imamo manju varijansu, a malu očekivanu vrednost (Explore - Exploit dilemma).
-U te svrhe koristićemo tzv. Akvizicionu funkciju (Acquisition function).
+GP regresijom dobijamo aposteriornu raspodelu $f(x)\mid Y$. Sledeći korak je da, na osnovu te raspodele, izaberemo novu tačku u kojoj evaluiramo $f$.
+Pri toj odluci balansiramo između \enquote{istraživanja} delova funkcije koji nisu dobro poznati (velika varijansa) i eksploatacije delova u kojima je varijansa manja, a očekivana vrednost mala (Explore -- Exploit dilemma).
+Za to koristimo tzv. akvizicionu funkciju (\textit{Acquisition function}).
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/gp_explore_exploit_dilema.pdf}
@@ -214,7 +215,7 @@ $$
   \mathrm{EI}(x)=\int_{-\infty}^{m}(m-u)\,f_F(u)\,du
   = m\!\int_{-\infty}^{m} f_F(u)\,du-\int_{-\infty}^{m}u\,f_F(u)\,du.
 $$
-Kako je $f_F(u)$ funkcija raspodele normalne raspodele $\mathcal{N}(\mu(x),\sigma^2(x))$ ovaj celokupan integral se može lako svesti na \parencite{snoek2012practical} :
+Pošto je $f_F(u)$ gustina normalne raspodele $\mathcal{N}(\mu(x),\sigma^2(x))$, ovaj integral se može svesti \parencite{snoek2012practical} na sledeći oblik:
 $$\mathrm{EI}(x) = (m-\mu(x))F_Z(z)+\sigma(x)f_Z(z)$$
 gde je $Z\sim \mathcal{N}(0,1)$, $F_Z$ je njegova kumulativna funkcija raspodele, $f_Z$ njegova gustina, i $z = \frac{m - \mu(x)}{\sigma(x)}$.
 \begin{figure}[!htbp]
@@ -230,7 +231,7 @@ $$
 $$
 \section{Implementacija}
 \subsection{Opšta procedura optimizacije}
-Kada se Bajesovska optimizacija implementira pomoću Gausovog procesa i akvizicione funkcije očekivanog poboljšanja algoritam je sledeći:
+Kada se Bajesovska optimizacija implementira pomoću Gausovog procesa i akvizicione funkcije očekivanog poboljšanja, dobijamo sledeći algoritam:
 \begin{algorithm}[H]
   \caption{Bayesian optimization sa GP i EI (minimizacija)}
   \label{alg:gp-ei}
@@ -248,11 +249,11 @@ Kada se Bajesovska optimizacija implementira pomoću Gausovog procesa i akvizici
     \State \Return $x_{\text{best}},\ \min(Y)$
   \end{algorithmic}
 \end{algorithm}
-U prethodno opisanom algoritmu \ref{alg:gp-ei} ostalo je još da definišemo kako se maksimizuje akviziciona funkcija EI.
-Kao što je pokazano u \ref{subsection:ei} izračunavanje očekivanog poboljšanja u nekoj datoj tački je relativno jednostavno.
-Međutim, kao što se može videti na slici \ref{fig:gp-ei-example} sama funkcija EI takođe nema neki povoljan oblik za maksimizaciju u opštem slučaju.
-Stoga se za maksimizaciju funkcije EI koristi neki drugi optimizacioni metod. Jedna metoda koja se koristi u praksi \parencite{balandat2020botorch} je L-BFGS.
-L-BFGS se u ovom slučaju pokreće više puta iz različitih početnih tačaka kako bi se što bolje optimizovala funkcija očekivanog poboljšanja. U ovom projektu korišćen je algoritam L-BFGS i pokretan je iz više početnih tačaka.
+U algoritmu \ref{alg:gp-ei} ostaje da definišemo način maksimizacije akvizicione funkcije EI.
+Kao što je pokazano u \ref{subsection:ei}, izračunavanje EI u zadatoj tački je relativno jednostavno.
+Međutim, kao što se vidi na slici \ref{fig:gp-ei-example}, sama EI funkcija u opštem slučaju nema pogodan oblik za direktnu maksimizaciju.
+Zato se za njenu optimizaciju koristi zaseban optimizacioni metod. Jedna od metoda koja se koristi u praksi \parencite{balandat2020botorch} je L-BFGS.
+U ovom projektu L-BFGS pokrećemo više puta iz različitih početnih tačaka kako bismo povećali verovatnoću pronalaska dobrog maksimuma EI funkcije.
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/bo_run_4x2.pdf}
@@ -311,7 +312,7 @@ Pa $\sigma^2(x)$ nalazimo kao:
 \begin{equation}
   \sigma^2(x) = K(x,x) - \|w\|_2^2, \qquad \text{gde je } Lw=K(x,X). \nonumber
 \end{equation}
-Gde $w$ određujemo rešavanjem trougaonog sistema: $Lw=K(x,X)$.
+gde $w$ određujemo rešavanjem trougaonog sistema: $Lw=K(x,X)$.
 \section{Eksperimenti}
 
 \subsection{Postavka}
@@ -320,9 +321,8 @@ Gde $w$ određujemo rešavanjem trougaonog sistema: $Lw=K(x,X)$.
 
 \subsection{Diskusija}
 
-\section{Zakljucak}
+\section{Zaključak}
 
 \printbibliography
 
 \end{document}
-
