@@ -56,19 +56,22 @@ def expected_improvement_min(
 
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generiše 4x2 prikaz evolucije BO procesa: GP levo, EI desno."
+        description=(
+            "Generiše 4x2 prikaze evolucije BO procesa (GP levo, EI desno) "
+            "za skupove uzoraka n=0,1,4,10 i n=0,1,2,5."
+        )
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=PROJECT_ROOT / "report" / "figures",
-        help="Direktorijum za čuvanje PDF figure.",
+        help="Direktorijum za čuvanje PDF figura.",
     )
     parser.add_argument(
         "--filename-stem",
         type=str,
         default="bo_run_4x2",
-        help="Osnovno ime izlaznog PDF fajla.",
+        help="Osnovno ime izlaznih PDF fajlova (dodaje se sufiks skupa n-vrednosti).",
     )
     parser.add_argument(
         "--xi",
@@ -155,29 +158,31 @@ def compute_state(
     }
 
 
-def main() -> None:
-    args = make_parser().parse_args()
-
-    use_blue_theme()
-
+def render_figure(
+    *,
+    x_grid: np.ndarray,
+    y_true: np.ndarray,
+    snapshots: list[int],
+    xi: float,
+    output_path: Path,
+) -> None:
     x_min, x_max = -4.0, 4.0
-    x_grid = np.linspace(x_min, x_max, 1200)
-    y_true = true_function(x_grid)
-
-    snapshots = [0, 1, 4, 10]
-    x_observed, y_observed = generate_bo_sequence(x_grid, max_points=max(snapshots), xi=args.xi)
-    states = [compute_state(x_grid, n, x_observed, y_observed, args.xi) for n in snapshots]
+    x_observed, y_observed = generate_bo_sequence(x_grid, max_points=max(1, max(snapshots)), xi=xi)
+    states = [compute_state(x_grid, n, x_observed, y_observed, xi) for n in snapshots]
 
     ei_max_global = max(float(np.max(state["ei"])) for state in states)
     ei_ylim_max = 1.15 * ei_max_global if ei_max_global > 1e-10 else 1.0
 
+    n_rows = len(snapshots)
     fig, axes = plt.subplots(
-        4,
+        n_rows,
         2,
-        figsize=(13.0, 12.0),
+        figsize=(13.0, 2.8 * n_rows + 0.8),
         sharex=True,
         gridspec_kw={"width_ratios": [2.5, 1.5], "hspace": 0.10, "wspace": 0.16},
     )
+    if n_rows == 1:
+        axes = np.asarray([axes])
 
     ei_color = "#0f5ea8"
 
@@ -236,8 +241,8 @@ def main() -> None:
         ax_gp.set_ylabel("f(x)")
         ax_ei.set_ylabel("EI")
 
-    axes[3, 0].set_xlabel("x")
-    axes[3, 1].set_xlabel("x")
+    axes[-1, 0].set_xlabel("x")
+    axes[-1, 1].set_xlabel("x")
 
     legend_handles = [
         Line2D([0], [0], color=PALETTE["true"], linewidth=2.1, label="Prava funkcija"),
@@ -260,12 +265,35 @@ def main() -> None:
 
     fig.subplots_adjust(left=0.07, right=0.98, top=0.93, bottom=0.06, hspace=0.14, wspace=0.16)
 
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    pdf_path = args.output_dir / f"{args.filename_stem}.pdf"
-    fig.savefig(pdf_path, bbox_inches="tight")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, bbox_inches="tight")
     plt.close(fig)
 
-    print(f"Saved figure: {pdf_path}")
+    print(f"Saved figure: {output_path}")
+
+
+def main() -> None:
+    args = make_parser().parse_args()
+
+    use_blue_theme()
+
+    x_grid = np.linspace(-4.0, 4.0, 1200)
+    y_true = true_function(x_grid)
+
+    snapshot_sets: list[tuple[list[int], str]] = [
+        ([0, 1, 4, 10], "0_1_4_10"),
+        ([0, 1, 2, 5], "0_1_2_5"),
+    ]
+
+    for snapshots, suffix in snapshot_sets:
+        output_path = args.output_dir / f"{args.filename_stem}_{suffix}.pdf"
+        render_figure(
+            x_grid=x_grid,
+            y_true=y_true,
+            snapshots=snapshots,
+            xi=args.xi,
+            output_path=output_path,
+        )
 
 
 if __name__ == "__main__":
