@@ -63,7 +63,7 @@
 \author{
 Ognjen Nešković 9/2022 \\
 Pavle Sekešan 87/2022 \\
-\small Projekat u okviru kursa Racunarska inteligencija
+\small Projekat u okviru kursa Računarska inteligencija
 }
 \date{Februar 2026}
 
@@ -91,10 +91,10 @@ U ovom radu je u te svrhe implementiran tzv. princip očekivanog poboljšanja (E
 
 \subsection{Ograničenja}
 Metoda Bajesovske optimizacije koja je opisana i implementirana u okviru ovog rada rešava problem:
-$$\min_{x \in A}f(x)$$
+$$\min_{x \in D}f(x)$$
 Metoda se može primeniti ukoliko je ispunjeno sledeće:
 \begin{itemize}
-  \item Za neko $x$ je lako proveriti da li pripada domenu $A$. Konkretno u ovoj implementaciji se pretpostavlja da je domen oblika $\{ x \in \mathbb{R}^d | l_i \leq x \leq h_i  \}$.
+  \item Za neko $x$ je lako proveriti da li pripada domenu $D$. Konkretno u ovoj implementaciji se pretpostavlja da je domen oblika $\{ x \in \mathbb{R}^d | l_i \leq x \leq h_i  \}$.
   \item Funkcija $f$ je neprekidna
 \end{itemize}
 
@@ -179,7 +179,7 @@ $$
 Ovim smo dobili aposteriori raspodelu što ćemo koristiti nadalje kako bismo odredili najpovoljniji deo prostora da uzorkujemo narednu tačku.
 \subsection{Akviziciona funkcija, EI}\label{subsection:ei}
 GP regresijom dobijamo aposteriornu raspodelu $f(x)\mid Y$. Sledeći korak u Bajesovskoj optimizaciji je da na osnovu tih informacija izaberemo novu tačku za evaluiranje $f$.
-Da bismo doneli tu odluku potrebno je da balansiramo između \enquote{istraživanja} delova funkcije koji nam nisu dobro poznati (velika varijansa) i eksploatisanja delova funkcije gde imamo manju varijansu, a veliku očekivanu vrednost (Explore - Exploit dilemma).
+Da bismo doneli tu odluku potrebno je da balansiramo između \enquote{istraživanja} delova funkcije koji nam nisu dobro poznati (velika varijansa) i eksploatisanja delova funkcije gde imamo manju varijansu, a malu očekivanu vrednost (Explore - Exploit dilemma).
 U te svrhe koristićemo tzv. Akvizicionu funkciju (Acquisition function).
 \begin{figure}[!htbp]
   \centering
@@ -215,8 +215,8 @@ $$
   = m\!\int_{-\infty}^{m} f_F(u)\,du-\int_{-\infty}^{m}u\,f_F(u)\,du.
 $$
 Kako je $f_F(u)$ funkcija raspodele normalne raspodele $\mathcal{N}(\mu(x),\sigma^2(x))$ ovaj celokupan integral se može lako svesti na \parencite{snoek2012practical} :
-$$\mathrm{EI}(x) = (m-\mu(x))\Phi(z)+\sigma(x)\phi(z)$$
-Gde su $\Phi$ - kumulativna funkcija raspodele i $\phi$ - funkcija raspodele standardne normalne raspodele i $z = \frac{m - \mu(x)}{\sigma(x)}$.
+$$\mathrm{EI}(x) = (m-\mu(x))F_Z(z)+\sigma(x)f_Z(z)$$
+gde je $Z\sim \mathcal{N}(0,1)$, $F_Z$ je njegova kumulativna funkcija raspodele, $f_Z$ njegova gustina, i $z = \frac{m - \mu(x)}{\sigma(x)}$.
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/gp_ei_2x1.pdf}
@@ -240,7 +240,7 @@ Kada se Bajesovska optimizacija implementira pomoću Gausovog procesa i akvizici
     \State $Y=\{\}$
     \For{$t=1$ \textbf{to} $N$}
     \State $\mu(x), \sigma(x) \gets \mathrm{fit\_gp}(X,Y,K)$
-    \State $x_{t}\gets \arg\max_{x\in A}\mathrm{EI}(x, \mu(x), \sigma(x))$
+    \State $x_{t}\gets \arg\max_{x\in D}\mathrm{EI}(x, \mu(x), \sigma(x))$
     \State $y_{t}\gets f(x_{t})$
     \State $X\gets X\cup\{x_{t}\}$,\quad $Y\gets Y\cup\{y_{t}\}$
     \EndFor
@@ -325,5 +325,4 @@ Gde $w$ određujemo rešavanjem trougaonog sistema: $Lw=K(x,X)$.
 \printbibliography
 
 \end{document}
-
 
