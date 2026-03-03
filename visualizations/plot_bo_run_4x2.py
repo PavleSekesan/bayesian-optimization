@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import os
 import sys
 from pathlib import Path
@@ -10,6 +9,10 @@ from scipy.special import erf
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_PATH = PROJECT_ROOT / "src"
+OUTPUT_DIR = PROJECT_ROOT / "report" / "figures"
+FILE_STEM = "bo_run_4x2"
+XI = 0.01
+
 MPLCONFIG_DIR = PROJECT_ROOT / ".runtime" / "mplconfig"
 MPLCONFIG_DIR.mkdir(parents=True, exist_ok=True)
 os.environ.setdefault("MPLCONFIGDIR", str(MPLCONFIG_DIR))
@@ -31,55 +34,17 @@ def true_function(x: np.ndarray) -> np.ndarray:
     return ((6.0 * t - 2.0) ** 2) * np.sin(12.0 * t - 4.0) / 8.0 + 0.15 * np.cos(5.0 * x)
 
 
-def expected_improvement_min(
-    mean: np.ndarray,
-    variance: np.ndarray,
-    best_y: float,
-    xi: float,
-) -> np.ndarray:
+def expected_improvement_min(mean: np.ndarray, variance: np.ndarray, best_y: float, xi: float) -> np.ndarray:
     std = np.sqrt(np.maximum(variance, 0.0))
-    eps = 1e-12
-
     improvement = best_y - mean - xi
     z = np.zeros_like(std)
-
-    valid = std > eps
+    valid = std > 1e-12
     z[valid] = improvement[valid] / std[valid]
-
     cdf = 0.5 * (1.0 + erf(z / np.sqrt(2.0)))
     pdf = (1.0 / np.sqrt(2.0 * np.pi)) * np.exp(-0.5 * z * z)
-
     ei = np.zeros_like(std)
     ei[valid] = improvement[valid] * cdf[valid] + std[valid] * pdf[valid]
     return np.maximum(ei, 0.0)
-
-
-def make_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Generiše 4x2 prikaze evolucije BO procesa (GP levo, EI desno) "
-            "za skupove uzoraka n=0,1,4,10 i n=0,1,2,5."
-        )
-    )
-    parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=PROJECT_ROOT / "report" / "figures",
-        help="Direktorijum za čuvanje PDF figura.",
-    )
-    parser.add_argument(
-        "--filename-stem",
-        type=str,
-        default="bo_run_4x2",
-        help="Osnovno ime izlaznih PDF fajlova (dodaje se sufiks skupa n-vrednosti).",
-    )
-    parser.add_argument(
-        "--xi",
-        type=float,
-        default=0.01,
-        help="Eksploracioni parametar xi za EI (minimizacija).",
-    )
-    return parser
 
 
 def build_gp() -> GaussianProcessRegressor:
@@ -125,33 +90,25 @@ def compute_state(
     y_observed: np.ndarray,
     xi: float,
 ) -> dict[str, np.ndarray]:
-    amplitude = 1.0
-
     if n_points == 0:
         mean = np.zeros_like(x_grid)
-        variance = np.full_like(x_grid, amplitude)
+        variance = np.full_like(x_grid, 1.0)
         ei = np.zeros_like(x_grid)
         x_train = np.empty((0,), dtype=np.float64)
         y_train = np.empty((0,), dtype=np.float64)
     else:
         x_train = x_observed[:n_points]
         y_train = y_observed[:n_points]
-
         gp = build_gp()
         gp.fit(x_train.reshape(-1, 1), y_train)
         mean, variance = gp.predict(x_grid.reshape(-1, 1))
-
-        best_y = float(np.min(y_train))
-        ei = expected_improvement_min(mean, variance, best_y=best_y, xi=xi)
+        ei = expected_improvement_min(mean, variance, best_y=float(np.min(y_train)), xi=xi)
 
     std = np.sqrt(variance)
-    lower = mean - 1.96 * std
-    upper = mean + 1.96 * std
-
     return {
         "mean": mean,
-        "lower": lower,
-        "upper": upper,
+        "lower": mean - 1.96 * std,
+        "upper": mean + 1.96 * std,
         "ei": ei,
         "x_train": x_train,
         "y_train": y_train,
@@ -159,29 +116,26 @@ def compute_state(
 
 
 def render_figure(
-    *,
     x_grid: np.ndarray,
     y_true: np.ndarray,
     snapshots: list[int],
     xi: float,
     output_path: Path,
 ) -> None:
-    x_min, x_max = -4.0, 4.0
     x_observed, y_observed = generate_bo_sequence(x_grid, max_points=max(1, max(snapshots)), xi=xi)
     states = [compute_state(x_grid, n, x_observed, y_observed, xi) for n in snapshots]
 
     ei_max_global = max(float(np.max(state["ei"])) for state in states)
     ei_ylim_max = 1.15 * ei_max_global if ei_max_global > 1e-10 else 1.0
 
-    n_rows = len(snapshots)
     fig, axes = plt.subplots(
-        n_rows,
+        len(snapshots),
         2,
-        figsize=(13.0, 2.8 * n_rows + 0.8),
+        figsize=(13.0, 2.8 * len(snapshots) + 0.8),
         sharex=True,
         gridspec_kw={"width_ratios": [2.5, 1.5], "hspace": 0.10, "wspace": 0.16},
     )
-    if n_rows == 1:
+    if len(snapshots) == 1:
         axes = np.asarray([axes])
 
     ei_color = "#0f5ea8"
@@ -194,14 +148,7 @@ def render_figure(
         ax_gp.plot(x_grid, state["mean"], color=PALETTE["mean"], linestyle="--", linewidth=1.9)
         ax_gp.plot(x_grid, state["lower"], color=PALETTE["bounds"], linewidth=1.1)
         ax_gp.plot(x_grid, state["upper"], color=PALETTE["bounds"], linewidth=1.1)
-        ax_gp.fill_between(
-            x_grid,
-            state["lower"],
-            state["upper"],
-            color=PALETTE["band"],
-            alpha=0.24,
-            linewidth=0,
-        )
+        ax_gp.fill_between(x_grid, state["lower"], state["upper"], color=PALETTE["band"], alpha=0.24, linewidth=0)
 
         if n_points > 0:
             ax_gp.scatter(state["x_train"], state["y_train"], color=PALETTE["points"], s=22, zorder=5)
@@ -235,9 +182,8 @@ def render_figure(
                 va="top",
             )
 
-        ax_gp.set_xlim(x_min, x_max)
-        ax_ei.set_xlim(x_min, x_max)
-
+        ax_gp.set_xlim(-4.0, 4.0)
+        ax_ei.set_xlim(-4.0, 4.0)
         ax_gp.set_ylabel("f(x)")
         ax_ei.set_ylabel("EI")
 
@@ -262,7 +208,6 @@ def render_figure(
     ]
 
     fig.legend(handles=legend_handles, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 0.995), frameon=True)
-
     fig.subplots_adjust(left=0.07, right=0.98, top=0.93, bottom=0.06, hspace=0.14, wspace=0.16)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -273,27 +218,25 @@ def render_figure(
 
 
 def main() -> None:
-    args = make_parser().parse_args()
-
     use_blue_theme()
 
     x_grid = np.linspace(-4.0, 4.0, 1200)
     y_true = true_function(x_grid)
 
-    snapshot_sets: list[tuple[list[int], str]] = [
-        ([0, 1, 4, 10], "0_1_4_10"),
-        ([0, 1, 2, 5], "0_1_2_5"),
-    ]
-
-    for snapshots, suffix in snapshot_sets:
-        output_path = args.output_dir / f"{args.filename_stem}_{suffix}.pdf"
-        render_figure(
-            x_grid=x_grid,
-            y_true=y_true,
-            snapshots=snapshots,
-            xi=args.xi,
-            output_path=output_path,
-        )
+    render_figure(
+        x_grid=x_grid,
+        y_true=y_true,
+        snapshots=[0, 1, 4, 10],
+        xi=XI,
+        output_path=OUTPUT_DIR / f"{FILE_STEM}_0_1_4_10.pdf",
+    )
+    render_figure(
+        x_grid=x_grid,
+        y_true=y_true,
+        snapshots=[0, 1, 2, 5],
+        xi=XI,
+        output_path=OUTPUT_DIR / f"{FILE_STEM}_0_1_2_5.pdf",
+    )
 
 
 if __name__ == "__main__":

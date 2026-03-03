@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from matplotlib import pyplot as plt
 
-# Shared blue-forward palette for all paper figures.
 PALETTE = {
     "background": "#ffffff",
     "axes_background": "#ffffff",
@@ -18,7 +17,6 @@ PALETTE = {
 
 
 def use_blue_theme() -> None:
-    """Apply consistent styling for all generated figures."""
     plt.style.use("default")
     plt.rcParams.update(
         {

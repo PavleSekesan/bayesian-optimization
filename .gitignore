@@ -27,6 +27,8 @@ ppdata/
 *.out
 *.toc
 *.bcf
+*.nav
+*.snm
 *.run.xml
 *.synctex.gz
 report/figures/*.png
