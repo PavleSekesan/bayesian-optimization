@@ -15,10 +15,9 @@ This repository contains a from-scratch Bayesian optimization implementation in 
 ## Install
 
 ```bash
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip setuptools
-python -m pip install --no-build-isolation -e .[dev,experiments]
+pip install -e .[dev,experiments]
 ```
 
 ## Run tests
