@@ -362,9 +362,11 @@ Ideja je da bi dobre metode za optimizaciju trebalo da često uspešno optimizuj
 
 \subsection{Rezultati}
 
-U ovom radu smo našu implementaciju Gausovske optimizacije poredili sa dve druge metode:
-- Nasumična pretraga -- nasumično generišemo tačke unutar domena u kojima evaluiramo funkciju i beležimo najbolje nađenu
-- Optuna GPSampler -- referentna implementacija uzorkovanja vođeno Gausovskim procesom, deo često korišćene biblioteke Optuna
+U ovom radu smo našu implementaciju Bajesovske optimizacije poredili sa dve druge metode:
+\begin{itemize}
+    \item Nasumična pretraga -- nasumično generišemo tačke unutar domena u kojima evaluiramo funkciju i beležimo najbolje nađenu
+    \item Optuna \parencite{ozaki2025optunahub} GPSampler -- referentna implementacija uzorkovanja vođeno Gausovskim procesom, deo često korišćene biblioteke Optuna
+\end{itemize}
 
 Za generisanje rezultata korišćene su biblioteke coco-experiment za pokretanje metoda na BBOB testu i coco-postprocess za prikazivanje i generisanje grafika profila izvršavanja.
 
@@ -374,12 +376,12 @@ Za generisanje rezultata korišćene su biblioteke coco-experiment za pokretanje
   \caption{Poređenje profila izvršavanja Optuna GPSampler-a (zeleno), Nasumične pretrage (narandžasto) i naše implementacije Bajesovske optimizacije (plavo)}
   \label{fig:gp-runtime-profile-results}
 \end{figure}
+\FloatBarrier
 
 Napomena: da bi se evaluacija završila u razumnom vremenu na našem hardveru, svaka metoda je kao maksimalan budžet imala $40d$ evaluacija, gde je $d$ broj dimenzija trenutne funkcije. Postavljeni maksimalan budžet dovodi do odsecanja izvršavanja posle određenog ukupnog broja evaluacija, pa sve nakon tog trenutka ne može da uveća broj uspeha, što se na grafiku vidi kao asimptota.
 
-\subsection{Diskusija}
-
-\section{Zaključak}
+\section{Diskusija rezultata i zaključak}
+U ovom radu implementiran je algoritam Bajesovske optimizacije zasnovan na Gausovim procesima i akvizicionoj funkciji očekivanog poboljšanja (EI), čije su performanse evaluirane na BBOB referentnom testu. Iako predložena metoda jasno nadmašuje nasumičnu pretragu, primetno zaostaje za referentnom Optuna implementacijom. Ova razlika u performansama prevashodno potiče od pojednostavljenja u našem trenutnom modelu. Potencijalno unapređenje rezultata moglo bi se ostvariti dinamičkim određivanjem hiperparametara kernela u svakoj iteraciji umesto oslanjanja na fiksirane vrednosti, kao i prelaskom na Matérn kernel. Dalje, pronalaženje optimuma akvizicione funkcije bilo bi znatno efikasnije ukoliko bi se umesto standardne EI funkcije koristio njen logaritam (LogEI) usled veće numeričke stabilnosti, a L-BFGS algoritmu eksplicitno prosleđivao analitički gradijent akvizicione funkcije. Pravci za dalji razvoj obuhvataju i integraciju naprednijih surogat modela, poput TPE (Tree-structured Parzen Estimator) algoritma.
 
 \printbibliography
 
