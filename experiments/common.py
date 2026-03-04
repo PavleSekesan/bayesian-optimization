@@ -31,13 +31,3 @@ def ensure_directory(path: str) -> Path:
     directory = Path(path)
     directory.mkdir(parents=True, exist_ok=True)
     return directory
-
-
-def configure_runtime_dirs(base_path: str = ".runtime") -> Path:
-    runtime_dir = ensure_directory(base_path)
-    cache_root = ensure_directory(str(runtime_dir / "cache"))
-    mpl_dir = ensure_directory(str(runtime_dir / "mplconfig"))
-
-    os.environ.setdefault("XDG_CACHE_HOME", str(cache_root.resolve()))
-    os.environ.setdefault("MPLCONFIGDIR", str(mpl_dir.resolve()))
-    return runtime_dir
