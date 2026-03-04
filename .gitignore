@@ -31,7 +31,3 @@ ppdata/
 *.snm
 *.run.xml
 *.synctex.gz
-report/figures/*.png
-report/figures/*.pdf
-ppdata_cap200
-inst

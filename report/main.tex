@@ -8,6 +8,7 @@
 \usepackage{setspace}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
+\usepackage{subcaption}
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{enumitem}
@@ -317,7 +318,64 @@ gde $w$ određujemo rešavanjem trougaonog sistema: $Lw=K(x,X)$.
 
 \subsection{Postavka}
 
+Za evaluaciju implementacije koristili smo BBOB (blackbox optimization bechmarking) referentni test za poređenje metoda za black box optimizaciju. Test se sastoji od raznovrsnih funkcija koje je potrebno minimizovati u što manjem broju evaluacija. Svaka funkcija je napravljena tako da postoji njena varijanta u $n$ dimenzija, pa tako mogu da se testiraju performanse metoda u različitom broju dimenzija. Takođe, za svaku funkciju postoji više njenih instanci, koje predstavljaju istu funkciju samo transliranu u prostoru. Ovo smanjuje šanse da neka metoda slučajno daje dobre rezultate na specifičnom primeru, ali ne i uopšteno za taj tip funkcije.
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}{0.3\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/sphere.png}
+    \caption{Sphere}
+  \end{subfigure}
+  \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{figures/sharp_ridge.png}
+      \caption{Sharp ridge}
+  \end{subfigure}
+
+  \vspace{0.5cm}
+
+  \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{figures/weierstrass.png}
+      \caption{Weierstrass}
+  \end{subfigure}
+  \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{figures/gallagher_21_peaks.png}
+      \caption{Gallagher 21 peaks}
+  \end{subfigure}
+  \caption{Grafici nekih funkcija (varijante sa dvodimenzionim domenom) iz BBOB testa. Sa X je označena pozicija optimuma.}
+  \label{fig:gp-bbob-examples}
+\end{figure}
+
+Metode se evaluiraju tako što se za svaku funkciju postavlja redom ciljana preciznost iz nekog opsega -- koliko blizu optimalnog rešenja metoda mora da nađe da bi se uzelo da je optimizacija uspešna. Ova preciznost za svaku funkciju uzima vrednosti od 100 pa sve do $10^{-8}$, čime se kontroliše težina optimizacionog problema. Što je ciljano odstupanje od optimuma postavljeno niže, to očekujemo za neku metodu da će joj biti potrebno više evaluacija funkcije da bi dostiglo to odstupanje.
+
+Ideja je da bi dobre metode za optimizaciju trebalo da često uspešno optimizuju date funkcije i da to urade u malom broju evaluacija. Variranjem tolerancije i instanci funkcija možemo da posmatramo koji procenat funkcija i njoj pridruženih ciljanih preciznosti je metoda uspešno optimizovala za neko ograničenje za broj evaluacija (budžet). Ovu zavisnost između udela uspešnosti i budžeta evaluacije nazivamo profil izvršavanja, i možemo je predstaviti na grafiku. Kada poredimo dve metode, očekujemo da za isti budžet bolji metod uspešno optimizuje veći udeo, tj. da je na grafiku "iznad".
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.6\linewidth]{figures/runtime_profile_example.pdf}
+  \caption{Primer poređenja profila izvršavanja raznih metoda iz literature do 2023. godine}
+  \label{fig:gp-runtime-profile-example}
+\end{figure}
+
 \subsection{Rezultati}
+
+U ovom radu smo našu implementaciju Gausovske optimizacije poredili sa dve druge metode:
+- Nasumična pretraga -- nasumično generišemo tačke unutar domena u kojima evaluiramo funkciju i beležimo najbolje nađenu
+- Optuna GPSampler -- referentna implementacija uzorkovanja vođeno Gausovskim procesom, deo često korišćene biblioteke Optuna
+
+Za generisanje rezultata korišćene su biblioteke coco-experiment za pokretanje metoda na BBOB testu i coco-postprocess za prikazivanje i generisanje grafika profila izvršavanja.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.6\linewidth]{figures/results.pdf}
+  \caption{Poređenje profila izvršavanja Optuna GPSampler-a (zeleno), Nasumične pretrage (narandžasto) i naše implementacije Bajesovske optimizacije (plavo)}
+  \label{fig:gp-runtime-profile-results}
+\end{figure}
+
+Napomena: da bi se evaluacija završila u razumnom vremenu na našem hardveru, svaka metoda je kao maksimalan budžet imala $40d$ evaluacija, gde je $d$ broj dimenzija trenutne funkcije. Postavljeni maksimalan budžet dovodi do odsecanja izvršavanja posle određenog ukupnog broja evaluacija, pa sve nakon tog trenutka ne može da uveća broj uspeha, što se na grafiku vidi kao asimptota.
 
 \subsection{Diskusija}
 
