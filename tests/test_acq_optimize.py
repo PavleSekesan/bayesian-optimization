@@ -14,7 +14,8 @@ def test_maximize_acquisition_returns_good_point() -> None:
 
     best_x, best_value = maximize_acquisition(
         acquisition_fn=acquisition,
-        x0=np.array([0.0], dtype=np.float64),
+        bounds=np.array([[0.0, 1.0]], dtype=np.float64),
+        rng=np.random.default_rng(0),
     )
 
     assert best_x.shape == (1,)

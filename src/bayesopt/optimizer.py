@@ -88,6 +88,7 @@ class BayesianOptimizer:
                 bounds=self._unit_bounds,
                 best_y=best_y,
                 xi=self._acq_config.xi,
+                rng=self._rng,
             )
 
             next_x = np.asarray(from_unit_cube(
