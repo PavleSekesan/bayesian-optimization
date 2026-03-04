@@ -21,8 +21,6 @@ python -m pip install --upgrade pip setuptools
 python -m pip install --no-build-isolation -e .[dev,experiments]
 ```
 
-Note: the COCO experiment module is imported as `cocoex`, but the pip package name is `coco-experiment`.
-
 ## Run tests
 
 ```bash
@@ -32,22 +30,21 @@ pytest
 ## Run BBOB experiments
 
 ```bash
-python experiments/run_bbob_bo.py --max-budget 200 --output results/bo_ei
-python experiments/run_bbob_random.py --max-budget 200 --output results/random
+python experiments/run_bbob_bo.py
+python experiments/run_bbob_optuna.py
+python experiments/run_bbob_random.py
 ```
 
-## Compare against published methods and generate plots
+## Postprocess results with cocopp
 
 ```bash
-python experiments/postprocess.py \
-  --input results/bo_ei \
-  --archive "CMA-ES" "BFGS" \
-  --output ppdata
+python -m cocopp -o ppdata \
+  exdata/bayesian-optimization \
+  exdata/optuna-gpei \
+  exdata/random \
 ```
 
-`experiments/postprocess.py` and `experiments/fetch_archives.py` use local runtime directories under `.runtime/` for cache/config data to avoid home-directory permission issues.
-
-`experiments/fetch_archives.py` can also resolve and download matching official archive datasets.
+Archive comparison helper scripts are not present in the current `experiments/` folder. Use `cocopp` directly or add your own wrapper script.
 
 ## Repository layout
 

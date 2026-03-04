@@ -24,6 +24,7 @@ experiments = [
   "coco-experiment>=2.8.0",
   "cocopp>=2.8.0",
   "matplotlib>=3.8",
+  "optuna>=4.7.0",
 ]
 
 [tool.setuptools]

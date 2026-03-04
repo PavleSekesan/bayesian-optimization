@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
         help="Optional cap for the per-problem budget. 0 means no cap.",
     )
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--output", default="results/random")
+    parser.add_argument("--output", default="random")
     return parser.parse_args()
 
 
